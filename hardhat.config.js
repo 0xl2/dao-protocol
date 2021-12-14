@@ -17,10 +17,12 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
  * @type import('hardhat/config').HardhatUserConfig
  */
 module.exports = {
-  defaultNetwork: "hardhat",
+  defaultNetwork: "avalanche_test",
   networks: {
-    hardhat: {
-      chainId: 1337
+    avalanche_test: {
+      chainId: 43113,
+      url: 'https://api.avax-test.network/ext/bc/C/rpc',
+      accounts: ['']
     },
     // ropsten: {
     //
