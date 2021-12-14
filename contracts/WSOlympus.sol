@@ -737,11 +737,7 @@ library SafeERC20 {
     }
 }
 
-interface IStaking {
-    function stake( uint _amount, address _recipient ) external returns ( bool );
-
-    function unstake( uint _amount, address _recipient ) external returns ( bool );
-
+interface IsOHM {
     function index() external view returns ( uint );
 }
 
@@ -750,49 +746,11 @@ contract wOHM is ERC20 {
     using Address for address;
     using SafeMath for uint;
 
-    address public immutable staking;
-    address public immutable OHM;
     address public immutable sOHM;
 
-    constructor( address _staking, address _OHM, address _sOHM ) ERC20( 'Wrapped sOHM', 'wsOHM' ) {
-        require( _staking != address(0) );
-        staking = _staking;
-        require( _OHM != address(0) );
-        OHM = _OHM;
+    constructor( address _sOHM ) ERC20( 'Wrapped sOHM', 'wsOHM' ) {
         require( _sOHM != address(0) );
         sOHM = _sOHM;
-    }
-
-        /**
-        @notice stakes OHM and wraps sOHM
-        @param _amount uint
-        @return uint
-     */
-    function wrapFromOHM( uint _amount ) external returns ( uint ) {
-        IERC20( OHM ).transferFrom( msg.sender, address(this), _amount );
-
-        IERC20( OHM ).approve( staking, _amount ); // stake OHM for sOHM
-        IStaking( staking ).stake( _amount, address(this) );
-
-        uint value = wOHMValue( _amount );
-        _mint( msg.sender, value );
-        return value;
-    }
-
-    /**
-        @notice unwrap sOHM and unstake OHM
-        @param _amount uint
-        @return uint
-     */
-    function unwrapToOHM( uint _amount ) external returns ( uint ) {
-        _burn( msg.sender, _amount );
-        
-        uint value = sOHMValue( _amount );
-        IERC20( sOHM ).approve( staking, value ); // unstake sOHM for OHM
-        IStaking( staking ).unstake( value, address(this) );
-
-        IERC20( OHM ).transfer( msg.sender, value );
-        return value;
     }
 
     /**
@@ -800,10 +758,10 @@ contract wOHM is ERC20 {
         @param _amount uint
         @return uint
      */
-    function wrapFromsOHM( uint _amount ) external returns ( uint ) {
+    function wrap( uint _amount ) external returns ( uint ) {
         IERC20( sOHM ).transferFrom( msg.sender, address(this), _amount );
         
-        uint value = wOHMValue( _amount );
+        uint value = sOHMTowOHM( _amount );
         _mint( msg.sender, value );
         return value;
     }
@@ -813,10 +771,10 @@ contract wOHM is ERC20 {
         @param _amount uint
         @return uint
      */
-    function unwrapTosOHM( uint _amount ) external returns ( uint ) {
+    function unwrap( uint _amount ) external returns ( uint ) {
         _burn( msg.sender, _amount );
 
-        uint value = sOHMValue( _amount );
+        uint value = wOHMTosOHM( _amount );
         IERC20( sOHM ).transfer( msg.sender, value );
         return value;
     }
@@ -826,8 +784,8 @@ contract wOHM is ERC20 {
         @param _amount uint
         @return uint
      */
-    function sOHMValue( uint _amount ) public view returns ( uint ) {
-        return _amount.mul( IStaking( staking ).index() ).div( 10 ** decimals() );
+    function wOHMTosOHM( uint _amount ) public view returns ( uint ) {
+        return _amount.mul( IsOHM( sOHM ).index() ).div( 10 ** decimals() );
     }
 
     /**
@@ -835,8 +793,8 @@ contract wOHM is ERC20 {
         @param _amount uint
         @return uint
      */
-    function wOHMValue( uint _amount ) public view returns ( uint ) {
-        return _amount.mul( 10 ** decimals() ).div( IStaking( staking ).index() );
+    function sOHMTowOHM( uint _amount ) public view returns ( uint ) {
+        return _amount.mul( 10 ** decimals() ).div( IsOHM( sOHM ).index() );
     }
 
 }

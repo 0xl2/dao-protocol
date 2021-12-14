@@ -19,7 +19,13 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
  */
 module.exports = {
   defaultNetwork: "avalanche_test",
+  // defaultNetwork: "local",
   networks: {
+    local: {
+      url: "http://localhost:7545",
+      chainId: 1337,
+      accounts: ['0caecdae0a94ad4ed4e7b529d22ce515f8e0cd8d74fac3e56850d763642985f1']
+    },
     avalanche_test: {
       chainId: 43113,
       url: 'https://api.avax-test.network/ext/bc/C/rpc',
@@ -32,5 +38,26 @@ module.exports = {
     // 
     // }
   },
-  solidity: "0.7.5",
+  solidity: {
+    compilers: [
+      {
+        version: "0.7.5",
+        settings: {
+          metadata: {
+            bytecodeHash: "none",
+          },
+          optimizer: {
+            enabled: true,
+            runs: 800,
+          },
+        },
+      },
+      {
+        version: "0.6.12",
+      },
+      {
+        version: "0.6.6"
+      }
+    ]
+  },
 };

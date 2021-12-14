@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 pragma solidity 0.7.5;
 
-
 interface IERC20 {
     function decimals() external view returns (uint8);
   /**
@@ -74,20 +73,26 @@ interface IERC20 {
   event Approval(address indexed owner, address indexed spender, uint256 value);
 }
 
-contract StakingWarmup {
+interface IStaking {
+    function stake( uint _amount, address _recipient ) external returns ( bool );
+    function claim( address _recipient ) external;
+}
 
+contract StakingHelper {
     address public immutable staking;
-    address public immutable sOHM;
+    address public immutable OHM;
 
-    constructor ( address _staking, address _sOHM ) {
+    constructor ( address _staking, address _OHM ) {
         require( _staking != address(0) );
         staking = _staking;
-        require( _sOHM != address(0) );
-        sOHM = _sOHM;
+        require( _OHM != address(0) );
+        OHM = _OHM;
     }
 
-    function retrieve( address _staker, uint _amount ) external {
-        require( msg.sender == staking );
-        IERC20( sOHM ).transfer( _staker, _amount );
+    function stake( uint _amount ) external {
+        IERC20( OHM ).transferFrom( msg.sender, address(this), _amount );
+        IERC20( OHM ).approve( staking, _amount );
+        IStaking( staking ).stake( _amount, msg.sender );
+        IStaking( staking ).claim( msg.sender );
     }
 }

@@ -741,7 +741,7 @@ interface IsOHM {
     function INDEX() external view returns ( uint );
 }
 
-contract wOHM is ERC20 {
+contract OldWOHM is ERC20 {
     using SafeERC20 for ERC20;
     using Address for address;
     using SafeMath for uint;

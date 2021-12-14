@@ -269,7 +269,6 @@ contract OlympusTreasury is Ownable {
     constructor (
         address _OHM,
         address _DAI,
-        address _Frax,
         address _OHMDAI,
         uint _blocksNeededForQueue
     ) {
@@ -279,11 +278,8 @@ contract OlympusTreasury is Ownable {
         isReserveToken[ _DAI ] = true;
         reserveTokens.push( _DAI );
 
-        isReserveToken[ _Frax] = true;
-        reserveTokens.push( _Frax );
-
-       isLiquidityToken[ _OHMDAI ] = true;
-       liquidityTokens.push( _OHMDAI );
+        isLiquidityToken[ _OHMDAI ] = true;
+        liquidityTokens.push( _OHMDAI );
 
         blocksNeededForQueue = _blocksNeededForQueue;
     }
@@ -305,7 +301,7 @@ contract OlympusTreasury is Ownable {
             require( isLiquidityDepositor[ msg.sender ], "Not approved" );
         }
 
-        uint value = valueOf(_token, _amount);
+        uint value = valueOf( _token, _amount );
         // mint OHM needed and store amount of rewards for distribution
         send_ = value.sub( _profit );
         IERC20Mintable( OHM ).mint( msg.sender, send_ );
@@ -410,7 +406,7 @@ contract OlympusTreasury is Ownable {
             require( isReserveManager[ msg.sender ], "Not approved" );
         }
 
-        uint value = valueOf(_token, _amount);
+        uint value = valueOf( _token, _amount );
         require( value <= excessReserves(), "Insufficient reserves" );
 
         totalReserves = totalReserves.sub( value );

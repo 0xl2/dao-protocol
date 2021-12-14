@@ -1,15 +1,76 @@
-// SPDX-License-Identifier: AGPL-3.0-only
-pragma solidity >=0.7.5;
+pragma solidity 0.7.5;
 
-import "./interfaces/IOlympusAuthority.sol";
+interface IOlympusAuthority {
+    event GovernorPushed(address indexed from, address indexed to, bool _effectiveImmediately);
+    event GuardianPushed(address indexed from, address indexed to, bool _effectiveImmediately);    
+    event PolicyPushed(address indexed from, address indexed to, bool _effectiveImmediately);    
+    event VaultPushed(address indexed from, address indexed to, bool _effectiveImmediately);    
 
-import "./types/OlympusAccessControlled.sol";
+    event GovernorPulled(address indexed from, address indexed to);
+    event GuardianPulled(address indexed from, address indexed to);
+    event PolicyPulled(address indexed from, address indexed to);
+    event VaultPulled(address indexed from, address indexed to);
 
-contract OlympusAuthority is IOlympusAuthority, OlympusAccessControlled {
+    /* ========== VIEW ========== */
+    
+    function governor() external view returns (address);
+    function guardian() external view returns (address);
+    function policy() external view returns (address);
+    function vault() external view returns (address);
+}
 
+abstract contract OlympusAccessControlled {
+
+    /* ========== EVENTS ========== */
+
+    event AuthorityUpdated(IOlympusAuthority indexed authority);
+
+    string UNAUTHORIZED = "UNAUTHORIZED"; // save gas
 
     /* ========== STATE VARIABLES ========== */
 
+    IOlympusAuthority public authority;
+
+
+    /* ========== Constructor ========== */
+
+    constructor(IOlympusAuthority _authority) {
+        authority = _authority;
+        emit AuthorityUpdated(_authority);
+    }
+    
+
+    /* ========== MODIFIERS ========== */
+    
+    modifier onlyGovernor() {
+        require(msg.sender == authority.governor(), UNAUTHORIZED);
+        _;
+    }
+    
+    modifier onlyGuardian() {
+        require(msg.sender == authority.guardian(), UNAUTHORIZED);
+        _;
+    }
+    
+    modifier onlyPolicy() {
+        require(msg.sender == authority.policy(), UNAUTHORIZED);
+        _;
+    }
+
+    modifier onlyVault() {
+        require(msg.sender == authority.vault(), UNAUTHORIZED);
+        _;
+    }
+    
+    /* ========== GOV ONLY ========== */
+    
+    function setAuthority(IOlympusAuthority _newAuthority) external onlyGovernor {
+        authority = _newAuthority;
+        emit AuthorityUpdated(_newAuthority);
+    }
+}
+
+contract OlympusAuthority is IOlympusAuthority, OlympusAccessControlled {
     address public override governor;
 
     address public override guardian;

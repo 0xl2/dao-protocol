@@ -508,6 +508,11 @@
     "@types/sinon-chai" "^3.2.3"
     "@types/web3" "1.0.19"
 
+"@openzeppelin/contracts@^4.3.2":
+  version "4.4.0"
+  resolved "https://registry.yarnpkg.com/@openzeppelin/contracts/-/contracts-4.4.0.tgz#4a1df71f736c31230bbbd634dfb006a756b51e6b"
+  integrity sha512-dlKiZmDvJnGRLHojrDoFZJmsQVeltVeoiRN7RK+cf2FmkhASDEblE0RiaYdxPNsUZa6mRG8393b9bfyp+V5IAw==
+
 "@resolver-engine/core@^0.3.3":
   version "0.3.3"
   resolved "https://registry.yarnpkg.com/@resolver-engine/core/-/core-0.3.3.tgz#590f77d85d45bc7ecc4e06c654f41345db6ca967"
@@ -3491,6 +3496,11 @@ fs.realpath@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/fs.realpath/-/fs.realpath-1.0.0.tgz#1504ad2523158caa40db4a2787cb01411994ea4f"
   integrity sha1-FQStJSMVjKpA20onh8sBQRmU6k8=
+
+fs@^0.0.1-security:
+  version "0.0.1-security"
+  resolved "https://registry.yarnpkg.com/fs/-/fs-0.0.1-security.tgz#8a7bd37186b6dddf3813f23858b57ecaaf5e41d4"
+  integrity sha1-invTcYa23d84E/I4WLV+yq9eQdQ=
 
 fsevents@~2.1.1:
   version "2.1.3"

@@ -1,20 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 pragma solidity 0.7.5;
 
-
-/**
- * @dev Wrappers over Solidity's arithmetic operations with added overflow
- * checks.
- *
- * Arithmetic operations in Solidity wrap on overflow. This can easily result
- * in bugs, because programmers usually assume that an overflow raises an
- * error, which is the standard behavior in high level programming languages.
- * `SafeMath` restores this intuition by reverting the transaction when an
- * operation overflows.
- *
- * Using this library instead of the unchecked operations eliminates an entire
- * class of bugs, so it's recommended to use it always.
- */
 library SafeMath {
     /**
      * @dev Returns the addition of two unsigned integers, reverting on
@@ -987,7 +973,7 @@ contract Ownable is IOwnable {
     }
 }
 
-contract sOlympus is ERC20Permit, Ownable {
+contract OldSOlympus is ERC20Permit, Ownable {
 
     using SafeMath for uint256;
 
@@ -999,8 +985,7 @@ contract sOlympus is ERC20Permit, Ownable {
     address public stakingContract;
     address public initializer;
 
-    event LogSupply(uint256 indexed epoch, uint256 timestamp, uint256 totalSupply );
-    event LogRebase( uint256 indexed epoch, uint256 rebase, uint256 index );
+    event LogRebase( uint256 indexed epoch, uint256 totalSupply );
     event LogStakingContractUpdated( address stakingContract );
 
     struct Rebase {
@@ -1015,6 +1000,8 @@ contract sOlympus is ERC20Permit, Ownable {
     Rebase[] public rebases;
 
     uint public INDEX;
+
+    mapping( address => bool ) public cannotReceive;
 
     uint256 private constant MAX_UINT256 = ~uint256(0);
     uint256 private constant INITIAL_FRAGMENTS_SUPPLY = 5000000 * 10**9;
@@ -1052,7 +1039,17 @@ contract sOlympus is ERC20Permit, Ownable {
 
     function setIndex( uint _INDEX ) external onlyManager() returns ( bool ) {
         require( INDEX == 0 );
-        INDEX = gonsForBalance( _INDEX );
+        INDEX = _INDEX;
+        return true;
+    }
+
+    /**
+        @notice allows pools to be blocked from receiving, but not sending, sOHM
+        @param address_ address
+        @return bool
+     */
+    function toggleReceiver( address address_ ) external onlyManager() returns ( bool ) {
+        cannotReceive[ address_ ] = !cannotReceive[ address_ ];
         return true;
     }
 
@@ -1066,8 +1063,7 @@ contract sOlympus is ERC20Permit, Ownable {
         uint256 circulatingSupply_ = circulatingSupply();
 
         if ( profit_ == 0 ) {
-            emit LogSupply( epoch_, block.timestamp, _totalSupply );
-            emit LogRebase( epoch_, 0, index() );
+            emit LogRebase( block.timestamp, _totalSupply );
             return _totalSupply;
         } else if ( circulatingSupply_ > 0 ){
             rebaseAmount = profit_.mul( _totalSupply ).div( circulatingSupply_ );
@@ -1108,8 +1104,7 @@ contract sOlympus is ERC20Permit, Ownable {
             blockNumberOccured: block.number
         }));
         
-        emit LogSupply( epoch_, block.timestamp, _totalSupply );
-        emit LogRebase( epoch_, rebasePercent, index() );
+        emit LogRebase( block.timestamp, _totalSupply );
 
         return true;
     }
@@ -1136,6 +1131,7 @@ contract sOlympus is ERC20Permit, Ownable {
     }
 
     function transfer( address to, uint256 value ) public override returns (bool) {
+        require( !cannotReceive[ to ], "Cannot send to this address" );
         uint256 gonValue = value.mul( _gonsPerFragment );
         _gonBalances[ msg.sender ] = _gonBalances[ msg.sender ].sub( gonValue );
         _gonBalances[ to ] = _gonBalances[ to ].add( gonValue );
@@ -1148,6 +1144,7 @@ contract sOlympus is ERC20Permit, Ownable {
     }
 
     function transferFrom( address from, address to, uint256 value ) public override returns ( bool ) {
+        require( !cannotReceive[ to ], "Cannot send to this address" );
        _allowedValue[ from ][ msg.sender ] = _allowedValue[ from ][ msg.sender ].sub( value );
        emit Approval( from, msg.sender,  _allowedValue[ from ][ msg.sender ] );
 

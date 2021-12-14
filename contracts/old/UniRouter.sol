@@ -1,4 +1,5 @@
-pragma solidity =0.6.6;
+// SPDX-License-Identifier: AGPL-3.0-or-later
+pragma solidity 0.6.6;
 
 interface IUniswapV2Factory {
     event PairCreated(address indexed token0, address indexed token1, address pair, uint);
@@ -241,10 +242,9 @@ contract UniswapV2Router02 is IUniswapV2Router02 {
     }
 
     receive() external payable {
-        assert(msg.sender == WETH); // only accept ETH via fallback from the WETH contract
+        assert(msg.sender == WETH);
     }
 
-    // **** ADD LIQUIDITY ****
     function _addLiquidity(
         address tokenA,
         address tokenB,
@@ -253,10 +253,8 @@ contract UniswapV2Router02 is IUniswapV2Router02 {
         uint amountAMin,
         uint amountBMin
     ) internal virtual returns (uint amountA, uint amountB) {
-        // create the pair if it doesn't exist yet
-        if (IUniswapV2Factory(factory).getPair(tokenA, tokenB) == address(0)) {
-            IUniswapV2Factory(factory).createPair(tokenA, tokenB);
-        }
+        if (IUniswapV2Factory(factory).getPair(tokenA, tokenB) == address(0)) IUniswapV2Factory(factory).createPair(tokenA, tokenB);
+        
         (uint reserveA, uint reserveB) = UniswapV2Library.getReserves(factory, tokenA, tokenB);
         if (reserveA == 0 && reserveB == 0) {
             (amountA, amountB) = (amountADesired, amountBDesired);

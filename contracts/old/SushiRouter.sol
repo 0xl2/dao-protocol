@@ -1,7 +1,19 @@
-pragma solidity ^0.5.16;
+// SPDX-License-Identifier: AGPL-3.0-or-later
+pragma solidity 0.6.12;
+
+import "hardhat/console.sol";
 
 library SafeMath {
-
+    /**
+     * @dev Returns the addition of two unsigned integers, reverting on
+     * overflow.
+     *
+     * Counterpart to Solidity's `+` operator.
+     *
+     * Requirements:
+     *
+     * - Addition cannot overflow.
+     */
     function add(uint256 a, uint256 b) internal pure returns (uint256) {
         uint256 c = a + b;
         require(c >= a, "SafeMath: addition overflow");
@@ -9,10 +21,30 @@ library SafeMath {
         return c;
     }
 
+    /**
+     * @dev Returns the subtraction of two unsigned integers, reverting on
+     * overflow (when the result is negative).
+     *
+     * Counterpart to Solidity's `-` operator.
+     *
+     * Requirements:
+     *
+     * - Subtraction cannot overflow.
+     */
     function sub(uint256 a, uint256 b) internal pure returns (uint256) {
         return sub(a, b, "SafeMath: subtraction overflow");
     }
 
+    /**
+     * @dev Returns the subtraction of two unsigned integers, reverting with custom message on
+     * overflow (when the result is negative).
+     *
+     * Counterpart to Solidity's `-` operator.
+     *
+     * Requirements:
+     *
+     * - Subtraction cannot overflow.
+     */
     function sub(uint256 a, uint256 b, string memory errorMessage) internal pure returns (uint256) {
         require(b <= a, errorMessage);
         uint256 c = a - b;
@@ -20,7 +52,20 @@ library SafeMath {
         return c;
     }
 
+    /**
+     * @dev Returns the multiplication of two unsigned integers, reverting on
+     * overflow.
+     *
+     * Counterpart to Solidity's `*` operator.
+     *
+     * Requirements:
+     *
+     * - Multiplication cannot overflow.
+     */
     function mul(uint256 a, uint256 b) internal pure returns (uint256) {
+        // Gas optimization: this is cheaper than requiring 'a' not being zero, but the
+        // benefit is lost if 'b' is also tested.
+        // See: https://github.com/OpenZeppelin/openzeppelin-contracts/pull/522
         if (a == 0) {
             return 0;
         }
@@ -31,23 +76,40 @@ library SafeMath {
         return c;
     }
 
+    /**
+     * @dev Returns the integer division of two unsigned integers. Reverts on
+     * division by zero. The result is rounded towards zero.
+     *
+     * Counterpart to Solidity's `/` operator. Note: this function uses a
+     * `revert` opcode (which leaves remaining gas untouched) while Solidity
+     * uses an invalid opcode to revert (consuming all remaining gas).
+     *
+     * Requirements:
+     *
+     * - The divisor cannot be zero.
+     */
     function div(uint256 a, uint256 b) internal pure returns (uint256) {
         return div(a, b, "SafeMath: division by zero");
     }
 
+    /**
+     * @dev Returns the integer division of two unsigned integers. Reverts with custom message on
+     * division by zero. The result is rounded towards zero.
+     *
+     * Counterpart to Solidity's `/` operator. Note: this function uses a
+     * `revert` opcode (which leaves remaining gas untouched) while Solidity
+     * uses an invalid opcode to revert (consuming all remaining gas).
+     *
+     * Requirements:
+     *
+     * - The divisor cannot be zero.
+     */
     function div(uint256 a, uint256 b, string memory errorMessage) internal pure returns (uint256) {
         require(b > 0, errorMessage);
         uint256 c = a / b;
+        assert(a == b * c + a % b); // There is no case in which this doesn't hold
+
         return c;
-    }
-
-    function mod(uint256 a, uint256 b) internal pure returns (uint256) {
-        return mod(a, b, "SafeMath: modulo by zero");
-    }
-
-    function mod(uint256 a, uint256 b, string memory errorMessage) internal pure returns (uint256) {
-        require(b != 0, errorMessage);
-        return a % b;
     }
 }
 
@@ -68,19 +130,22 @@ contract Timelock {
     address public admin;
     address public pendingAdmin;
     uint public delay;
+    bool public admin_initialized;
 
     mapping (bytes32 => bool) public queuedTransactions;
 
 
     constructor(address admin_, uint delay_) public {
         require(delay_ >= MINIMUM_DELAY, "Timelock::constructor: Delay must exceed minimum delay.");
-        require(delay_ <= MAXIMUM_DELAY, "Timelock::setDelay: Delay must not exceed maximum delay.");
+        require(delay_ <= MAXIMUM_DELAY, "Timelock::constructor: Delay must not exceed maximum delay.");
 
         admin = admin_;
         delay = delay_;
+        admin_initialized = false;
     }
 
-    function() external payable { }
+    // XXX: function() external payable { }
+    receive() external payable { }
 
     function setDelay(uint delay_) public {
         require(msg.sender == address(this), "Timelock::setDelay: Call must come from Timelock.");
@@ -100,7 +165,13 @@ contract Timelock {
     }
 
     function setPendingAdmin(address pendingAdmin_) public {
-        require(msg.sender == address(this), "Timelock::setPendingAdmin: Call must come from Timelock.");
+        // allows one time setting of admin for deployment purposes
+        if (admin_initialized) {
+            require(msg.sender == address(this), "Timelock::setPendingAdmin: Call must come from Timelock.");
+        } else {
+            require(msg.sender == admin, "Timelock::setPendingAdmin: First call must come from admin.");
+            admin_initialized = true;
+        }
         pendingAdmin = pendingAdmin_;
 
         emit NewPendingAdmin(pendingAdmin);
@@ -144,7 +215,6 @@ contract Timelock {
             callData = abi.encodePacked(bytes4(keccak256(bytes(signature))), data);
         }
 
-        // solium-disable-next-line security/no-call-value
         (bool success, bytes memory returnData) = target.call.value(value)(callData);
         require(success, "Timelock::executeTransaction: Transaction execution reverted.");
 
@@ -154,7 +224,6 @@ contract Timelock {
     }
 
     function getBlockTimestamp() internal view returns (uint) {
-        // solium-disable-next-line security/no-block-members
         return block.timestamp;
     }
 }
