@@ -1,4 +1,5 @@
 require("@nomiclabs/hardhat-waffle");
+const keyConfig = require('./config/config.json');
 
 // This is a sample Hardhat task. To learn how to create your own go to
 // https://hardhat.org/guides/create-task.html
@@ -22,7 +23,7 @@ module.exports = {
     avalanche_test: {
       chainId: 43113,
       url: 'https://api.avax-test.network/ext/bc/C/rpc',
-      accounts: ['']
+      accounts: [keyConfig.eth_key]
     },
     // ropsten: {
     //
