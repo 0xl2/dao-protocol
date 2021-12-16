@@ -506,11 +506,7 @@ interface IERC20 {
   event Approval(address indexed owner, address indexed spender, uint256 value);
 }
 
-abstract contract ERC20
-  is 
-    IERC20
-  {
-
+abstract contract ERC20 is IERC20 {
   using SafeMath for uint256;
 
   // TODO comment actual hash value.

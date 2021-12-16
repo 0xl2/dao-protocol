@@ -24,10 +24,14 @@ module.exports = {
     local: {
       url: "http://localhost:7545",
       chainId: 1337,
-      accounts: ['0caecdae0a94ad4ed4e7b529d22ce515f8e0cd8d74fac3e56850d763642985f1']
+      gasPrice: 20000000000,
+      gas: 2100000,
+      accounts: [keyConfig.ganache]
     },
     avalanche_test: {
       chainId: 43113,
+      gasPrice: 225000000000,
+      gas: 2100000,
       url: 'https://api.avax-test.network/ext/bc/C/rpc',
       accounts: [keyConfig.eth_key]
     },
