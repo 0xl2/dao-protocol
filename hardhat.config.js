@@ -18,8 +18,8 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
  * @type import('hardhat/config').HardhatUserConfig
  */
 module.exports = {
-  defaultNetwork: "avalanche_test",
-  // defaultNetwork: "local",
+  // defaultNetwork: "avalanche_test",
+  defaultNetwork: "local",
   networks: {
     local: {
       url: "http://localhost:7545",

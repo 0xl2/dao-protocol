@@ -51,20 +51,20 @@ async function main() {
 
     const Migrator = await ethers.getContractFactory("OlympusTokenMigrator");
     const migrator = await Migrator.deploy(
-        // oldOHM.address,
-        // oldSOHM.address,
-        // oldTreasury.address,
-        // oldStaking.address,
-        // oldWSOHM.address,
-        // timeLock.address,
-        // uniRouter,
-        "0xdaD43B56dBB3AaA32f3B9de0Eb2987DdB1f0C10b",
-        "0x66494794825Cc04081aF23c99FF38077fb8CC2E0",
-        "0x75E89EB75E2c7d0A4D4b506Dffc66f67B8e720B9",
-        "0x0F1f56C22B9c65962e7727b7F7Ea34355D738A23",
-        "0x86731F3bEb236DB99ae7a96698F5eaD9F64659c8",
-        "0xA0C283F7C44Aa524810D055Bc5d7d428ce8d1BCd",
-        "0xE54Ca86531e17Ef3616d22Ca28b0D458b6C89106",
+        oldOHM.address,
+        oldSOHM.address,
+        oldTreasury.address,
+        oldStaking.address,
+        oldWSOHM.address,
+        timeLock.address,
+        uniRouter,
+        // "0xdaD43B56dBB3AaA32f3B9de0Eb2987DdB1f0C10b",
+        // "0x66494794825Cc04081aF23c99FF38077fb8CC2E0",
+        // "0x75E89EB75E2c7d0A4D4b506Dffc66f67B8e720B9",
+        // "0x0F1f56C22B9c65962e7727b7F7Ea34355D738A23",
+        // "0x86731F3bEb236DB99ae7a96698F5eaD9F64659c8",
+        // "0xA0C283F7C44Aa524810D055Bc5d7d428ce8d1BCd",
+        // "0xE54Ca86531e17Ef3616d22Ca28b0D458b6C89106",
         "0",
         authority.address
     );
@@ -91,7 +91,7 @@ async function main() {
 
     await migrator.setgOHM(gOHM.address);
     
-    const daiAddr = "0xdBaFac57522481A7bC2CaBa0279a2B24e6C86ab5"
+    // const daiAddr = "0xdBaFac57522481A7bC2CaBa0279a2B24e6C86ab5"
     // old treasury 0x75E89EB75E2c7d0A4D4b506Dffc66f67B8e720B9
     const OlympusTreasury = await ethers.getContractFactory("OlympusTreasury");
     // const olympusTreasury = await OlympusTreasury.deploy(ohm.address, daiAddr, daiAddr, "0")
@@ -100,8 +100,8 @@ async function main() {
 
     await authority.pushVault(olympusTreasury.address, true);
 
-    const OlympusStaking = await ethers.getContractFactory("OlympusStaking");
-    const staking = await OlympusStaking.deploy(
+    const Staking = await ethers.getContractFactory("OlympusStaking");
+    const staking = await Staking.deploy(
         ohm.address,
         sOHM.address,
         "2200",
