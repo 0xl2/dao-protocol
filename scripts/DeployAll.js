@@ -108,7 +108,10 @@ async function main() {
         firstEpochNumber,
         firstBlockNumber
     );
-    await staking.deployed()
+    await staking.deployed();
+    
+    // initialize warmup
+    await staking.connect(deployer).setWarmup(2);
 
     // Initialize sohm
     await sOHM.setIndex("7675210820");
