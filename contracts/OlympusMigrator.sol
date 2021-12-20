@@ -304,9 +304,6 @@ interface IERC20 {
   event Approval(address indexed owner, address indexed spender, uint256 value);
 }
 
-/// @notice Safe IERC20 and ETH transfer library that safely handles missing return values.
-/// @author Modified from Uniswap (https://github.com/Uniswap/uniswap-v3-periphery/blob/main/contracts/libraries/TransferHelper.sol)
-/// Taken from Solmate
 library SafeERC20 {
     function safeTransferFrom(
         IERC20 token,
@@ -352,20 +349,6 @@ library SafeERC20 {
     }
 }
 
-interface IgOHM is IERC20 {
-  function mint(address _to, uint256 _amount) external;
-
-  function burn(address _from, uint256 _amount) external;
-
-  function index() external view returns (uint256);
-
-  function balanceFrom(uint256 _amount) external view returns (uint256);
-
-  function balanceTo(uint256 _amount) external view returns (uint256);
-
-  function migrate( address _staking, address _sOHM ) external;
-}
-
 // Old wsOHM interface
 interface IwsOHM is IERC20 {
   function wrap(uint256 _amount) external returns (uint256);
@@ -404,7 +387,6 @@ interface IsOHM is IERC20 {
 contract OlympusTokenMigrator is OlympusAccessControlled {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
-    using SafeERC20 for IgOHM;
     using SafeERC20 for IsOHM;
     using SafeERC20 for IwsOHM;
 
@@ -426,7 +408,6 @@ contract OlympusTokenMigrator is OlympusAccessControlled {
     IUniswapV2Router public immutable sushiRouter;
     IUniswapV2Router public immutable uniRouter;
 
-    IgOHM public gOHM;
     ITreasury public newTreasury;
     IStaking public newStaking;
     IERC20 public newOHM;
@@ -471,8 +452,7 @@ contract OlympusTokenMigrator is OlympusAccessControlled {
 
     enum TYPE {
         UNSTAKED,
-        STAKED,
-        WRAPPED
+        STAKED
     }
 
     // migrate OHMv1, sOHMv1, or wsOHM for OHMv2, sOHMv2, or gOHM
@@ -498,8 +478,6 @@ contract OlympusTokenMigrator is OlympusAccessControlled {
         if (ohmMigrated) {
             require(oldSupply >= oldOHM.totalSupply(), "OHMv1 minted");
             _send(wAmount, _to);
-        } else {
-            gOHM.mint(msg.sender, wAmount);
         }
     }
 
@@ -526,38 +504,15 @@ contract OlympusTokenMigrator is OlympusAccessControlled {
         if (ohmMigrated) {
             require(oldSupply >= oldOHM.totalSupply(), "OHMv1 minted");
             _send(wAmount, _to);
-        } else {
-            gOHM.mint(msg.sender, wAmount);
         }
     }
 
     // send preferred token
     function _send(uint256 wAmount, TYPE _to) internal {
-        if (_to == TYPE.WRAPPED) {
-            gOHM.safeTransfer(msg.sender, wAmount);
-        } else if (_to == TYPE.STAKED) {
+        if (_to == TYPE.STAKED) {
             newStaking.unwrap(msg.sender, wAmount);
         } else if (_to == TYPE.UNSTAKED) {
             newStaking.unstake(msg.sender, wAmount, false, false);
-        }
-    }
-
-    // bridge back to OHM, sOHM, or wsOHM
-    function bridgeBack(uint256 _amount, TYPE _to) external {
-        if (!ohmMigrated) {
-            gOHM.burn(msg.sender, _amount);
-        } else {
-            gOHM.safeTransferFrom(msg.sender, address(this), _amount);
-        }
-
-        uint256 amount = oldwsOHM.wOHMTosOHM(_amount);
-        // error throws if contract does not have enough of type to send
-        if (_to == TYPE.UNSTAKED) {
-            oldOHM.safeTransfer(msg.sender, amount);
-        } else if (_to == TYPE.STAKED) {
-            oldsOHM.safeTransfer(msg.sender, amount);
-        } else if (_to == TYPE.WRAPPED) {
-            oldwsOHM.safeTransfer(msg.sender, _amount);
         }
     }
 
@@ -602,14 +557,6 @@ contract OlympusTokenMigrator is OlympusAccessControlled {
         timelockEnd = block.number.add(timelockLength);
 
         emit TimelockStarted(block.number, timelockEnd);
-    }
-
-    // set gOHM address
-    function setgOHM(address _gOHM) external onlyGovernor {
-        require(address(gOHM) == address(0), "Already set");
-        require(_gOHM != address(0), "Zero address: gOHM");
-
-        gOHM = IgOHM(_gOHM);
     }
 
     // call internal migrate token function
@@ -670,7 +617,6 @@ contract OlympusTokenMigrator is OlympusAccessControlled {
         address recipient
     ) external onlyGovernor {
         require(tokenAddress != address(0), "Token address cannot be 0x0");
-        require(tokenAddress != address(gOHM), "Cannot withdraw: gOHM");
         require(tokenAddress != address(oldOHM), "Cannot withdraw: old-OHM");
         require(tokenAddress != address(oldsOHM), "Cannot withdraw: old-sOHM");
         require(tokenAddress != address(oldwsOHM), "Cannot withdraw: old-wsOHM");
@@ -709,11 +655,9 @@ contract OlympusTokenMigrator is OlympusAccessControlled {
 
         oldSupply = oldOHM.totalSupply(); // log total supply at time of migration
 
-        gOHM.migrate(_newStaking, _newsOHM); // change gOHM minter
-
         _migrateToken(_reserve, true); // will deposit tokens into new treasury so reserves can be accounted for
 
-        _fund(oldsOHM.circulatingSupply()); // fund with current staked supply for token migration
+        // _fund(oldsOHM.circulatingSupply()); // fund with current staked supply for token migration
 
         emit Migrated(_newStaking, _newTreasury);
     }

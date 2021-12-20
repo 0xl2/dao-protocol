@@ -24,14 +24,14 @@ module.exports = {
     local: {
       url: "http://localhost:7545",
       chainId: 1337,
-      gasPrice: 20000000000,
-      gas: 2100000,
+      gasPrice: 2000000000,
+      gas: 6000000,
       accounts: [keyConfig.ganache]
     },
     ropsten: {
       url: `https://ropsten.infura.io/v3/${keyConfig.infura_key}`,
       chainId: 3,
-      gasPrice: 8000000000,
+      gasPrice: 2000000000,
       gas: 2100000,
       accounts: [keyConfig.eth_key]
     },
@@ -71,7 +71,21 @@ module.exports = {
       },
       {
         version: "0.5.16"
+      },
+      {
+        version: "0.4.18"
       }
-    ]
+    ],
+    settings: {
+      outputSelection: {
+          "*": {
+              "*": ["storageLayout"],
+          },
+      },
+      optimizer: {
+        enabled: true,
+        runs: 200
+      }
+    },
   },
 };

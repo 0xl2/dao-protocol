@@ -35,7 +35,5 @@ describe("OHM transfer test", () => {
         } catch(err) {
             console.log(err);
         }
-        
-        // 0x02b5e3af16b1880000', _isBigNumber: true} 100 '0x29c682349e50D6980048f5D675C73962d6b15589'
     })
 });

@@ -3,9 +3,6 @@ pragma solidity >=0.7.5;
 
 import {IERC20} from "../interfaces/IERC20.sol";
 
-/// @notice Safe IERC20 and ETH transfer library that safely handles missing return values.
-/// @author Modified from Uniswap (https://github.com/Uniswap/uniswap-v3-periphery/blob/main/contracts/libraries/TransferHelper.sol)
-/// Taken from Solmate
 library SafeERC20 {
     function safeTransferFrom(
         IERC20 token,
