@@ -59,5 +59,4 @@ library SafeMath {
             c = 1;
         }
     }
-
 }

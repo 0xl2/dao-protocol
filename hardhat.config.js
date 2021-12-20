@@ -28,6 +28,13 @@ module.exports = {
       gas: 2100000,
       accounts: [keyConfig.ganache]
     },
+    ropsten: {
+      url: `https://ropsten.infura.io/v3/${keyConfig.infura_key}`,
+      chainId: 3,
+      gasPrice: 8000000000,
+      gas: 2100000,
+      accounts: [keyConfig.eth_key]
+    },
     avalanche_test: {
       chainId: 43113,
       gasPrice: 225000000000,
@@ -61,6 +68,9 @@ module.exports = {
       },
       {
         version: "0.6.6"
+      },
+      {
+        version: "0.5.16"
       }
     ]
   },

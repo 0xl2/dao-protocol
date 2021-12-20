@@ -125,22 +125,19 @@ contract DAI is LibNote {
     }
 
     function _allowance( address account_, address sender_ ) internal view returns ( uint ) {
-      
       return allowances[account_][sender_];
     }
 
     // --- Token ---
     function transfer(address dst, uint wad) external returns (bool) {
-        return transferFrom(msg.sender, dst, wad);
+      return transferFrom(msg.sender, dst, wad);
     }
 
     function transferFrom(address src, address dst, uint wad) public returns (bool) {
-      
-      
       require(balanceOf[src] >= wad, "Dai/insufficient-balance");
         if (src != msg.sender && _allowance( src, msg.sender ) != uint(-1)) {
-            require(_allowance( src, msg.sender ) >= wad, "Dai/insufficient-allowance");
-            allowances[src][msg.sender] = sub(_allowance( src, msg.sender ), wad);
+          require(_allowance( src, msg.sender ) >= wad, "Dai/insufficient-allowance");
+          allowances[src][msg.sender] = sub(_allowance( src, msg.sender ), wad);
         }
         balanceOf[src] = sub(balanceOf[src], wad);
         balanceOf[dst] = add(balanceOf[dst], wad);
