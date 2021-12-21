@@ -21,6 +21,16 @@ module.exports = {
   // defaultNetwork: "avalanche_test",
   defaultNetwork: "local",
   networks: {
+    hardhat: {
+      // url: "http://localhost:8545",
+      chainId: 31337,
+      // gasPrice: 2000000000,
+      gas: 6000000,
+      forking: {
+        enabled: true,
+        url: `https://mainnet.infura.io/v3/${keyConfig.infura_key}`,
+      }
+    },
     local: {
       url: "http://localhost:7545",
       chainId: 1337,
@@ -29,7 +39,7 @@ module.exports = {
       accounts: [keyConfig.ganache]
     },
     ropsten: {
-      url: `https://ropsten.infura.io/v3/${keyConfig.infura_key}`,
+      url: `https://eth-mainnet.alchemyapi.io/v2/${keyConfig.alchemy_key}`,
       chainId: 3,
       gasPrice: 2000000000,
       gas: 2100000,

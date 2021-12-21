@@ -38,6 +38,10 @@ contract UniswapV2Factory is IUniswapV2Factory {
         emit PairCreated(token0, token1, pair, allPairs.length);
     }
 
+    function getHash() public returns(bytes32 encodeCode) {
+        encodeCode = keccak256(abi.encodePacked(type(UniswapV2Pair).creationCode));
+    }
+
     function setFeeTo(address _feeTo) external {
         require(msg.sender == feeToSetter, 'UniswapV2: FORBIDDEN');
         feeTo = _feeTo;

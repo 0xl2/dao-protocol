@@ -1,6 +1,5 @@
 const { ethers } = require("hardhat");
 const fs = require('fs');
-const { expect } = require("chai");
 
 async function main() {
     const epochLength = "2200"
@@ -83,10 +82,20 @@ async function main() {
     const UniFactory = await ethers.getContractFactory("UniswapV2Factory")
     const uniFactory = await UniFactory.deploy(deployer.address)
     await uniFactory.deployed()
-    
+    // const uniFactoryAddress = "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f";
+    // const uniFactory = await ethers.getContractAt("UniswapV2Factory", uniFactoryAddress)
+
+    // console.log(await uniFactory.callStatic.getHash())
+
     // create pair dai/ohm, dai/old ohm
-    const pairDaiOOHM = await uniFactory.callStatic.createPair(dai.address, oldOHM.address)
-    const pairDaiOHM = await uniFactory.callStatic.createPair(dai.address, ohm.address)
+    await uniFactory.createPair(dai.address, oldOHM.address)
+    await uniFactory.createPair(dai.address, ohm.address)
+
+    // const uniFacotry1 = await ethers.getContractAt("UniswapV2Factory",uniFactory.address);
+    const pairDaiOHM = await uniFactory.getPair(dai.address, ohm.address);
+    const pairDaiOOHM = await uniFactory.getPair(dai.address, oldOHM.address);
+
+    console.log(pairDaiOOHM, pairDaiOHM);
 
     const WETHToken = await ethers.getContractFactory("WETHToken")
     const wethToken = await WETHToken.deploy()
@@ -95,6 +104,21 @@ async function main() {
     const UniRouter = await ethers.getContractFactory("UniswapV2Router02")
     const uniRouter = await UniRouter.deploy(uniFactory.address, wethToken.address)
     await uniRouter.deployed()
+    // const uniRouterAddress = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D"
+    // const sushiRouterAddress = "0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506"
+    
+    await dai.approve(uniRouter.address, ethers.utils.parseUnits("100", 'ether'));
+    await ohm.approve(uniRouter.address, ethers.utils.parseUnits("10", 'gwei'));
+    await uniRouter.addLiquidity(
+        dai.address,
+        ohm.address,
+        ethers.utils.parseUnits("100", 'ether'), 
+        ethers.utils.parseUnits("10", 'gwei'),
+        ethers.utils.parseUnits("1", 'ether'), 
+        ethers.utils.parseUnits("1", 'ether'),
+        deployer.address,
+        (await ethers.provider.getBlock()).timestamp + 12000
+    );
 
     const Migrator = await ethers.getContractFactory("OlympusTokenMigrator");
     const migrator = await Migrator.deploy(
@@ -115,11 +139,13 @@ async function main() {
     await oldTreasury.connect(deployer).queue(3, migratorAddress);
     await oldTreasury.connect(deployer).queue(6, migratorAddress);
     await oldTreasury.connect(deployer).queue(2, pairDaiOOHM);
+    await oldTreasury.connect(deployer).queue(2, pairDaiOHM);
 
     await oldTreasury.connect(deployer).toggle(1, migratorAddress, migratorAddress);
     await oldTreasury.connect(deployer).toggle(3, migratorAddress, migratorAddress);
     await oldTreasury.connect(deployer).toggle(6, migratorAddress, migratorAddress);
     await oldTreasury.connect(deployer).toggle(2, pairDaiOOHM, pairDaiOOHM);
+    await oldTreasury.connect(deployer).toggle(2, pairDaiOHM, pairDaiOHM);
 
     await olympusTreasury.connect(deployer).queue(0, migratorAddress);
     await olympusTreasury.connect(deployer).toggle(0, migratorAddress, migratorAddress);
@@ -132,8 +158,8 @@ async function main() {
 
     await migrator.migrateContracts(olympusTreasury.address, staking.address, ohm.address, sOHM.address, dai.address)
     // add liquidity to the pool
-    await migrator.migrateLP(pairDaiOHM, false, dai.address, ethers.utils.parseUnits("10", 'ether'), ethers.utils.parseUnits("10", 'ether'));
-
+    // console.log(await migrator.callStatic.migrateLP(pairDaiOOHM, false, dai.address, ethers.utils.parseUnits("10", 'ether'), ethers.utils.parseUnits("10", 'ether')));
+    
     // Initialize sohm
     await sOHM.setIndex("0");
     // await sOHM.setgOHM(gOHM.address);
@@ -169,6 +195,9 @@ async function main() {
         bondCalculator.address
     );
     await bondDepository.deployed();
+    
+    // very important for bonding depository
+    await bondDepository.initializeBondTerms(100, 10000, 100, 1000, 500, 10000, 1000);
 
 const config = `DAI_ADDRESS: "${dai.address}",
 OHM_ADDRESS: "${ohm.address}",
@@ -183,11 +212,11 @@ REDEEM_HELPER_ADDRESS: "${redeemHelper.address}",
 WSOHM_ADDRESS: "${wsOHM.address}",
 GOHM_ADDRESS: "${gOHM.address}",
 MIGRATOR_ADDRESS: "${migratorAddress}",
-DAI_BIND_DEPOSITORY: "${bondDepository.address}",
-DAI_OLD_OHM_PAIR: "${pairDaiOOHM.address}",
+DAI_BOND_DEPOSITORY: "${bondDepository.address}",
+DAI_OLD_OHM_PAIR: "${pairDaiOOHM}",
 DAI_OHM_PAIR: "${pairDaiOHM}",
-UNI_FACTOR: "${uniFactory.address}"
-UNI_FOUTER: "${uniRouter.address}"
+UNI_FACTOR: "${uniFactory.address}",
+UNI_FOUTER: "${uniRouter.address}",
 `
     
     fs.writeFileSync('./config/local-deploy.js', config)
