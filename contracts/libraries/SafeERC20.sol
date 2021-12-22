@@ -1,49 +1,66 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity >=0.7.5;
 
-import {IERC20} from "../interfaces/IERC20.sol";
+import "./SafeMath.sol";
+import "./Address.sol";
+
+import "../interfaces/IERC20.sol";
 
 library SafeERC20 {
-    function safeTransferFrom(
-        IERC20 token,
-        address from,
-        address to,
-        uint256 amount
-    ) internal {
-        (bool success, bytes memory data) = address(token).call(
-            abi.encodeWithSelector(IERC20.transferFrom.selector, from, to, amount)
-        );
+    using SafeMath for uint256;
+    using Address for address;
 
-        require(success && (data.length == 0 || abi.decode(data, (bool))), "TRANSFER_FROM_FAILED");
+    function safeTransfer(IERC20 token, address to, uint256 value) internal {
+        _callOptionalReturn(token, abi.encodeWithSelector(token.transfer.selector, to, value));
     }
 
-    function safeTransfer(
-        IERC20 token,
-        address to,
-        uint256 amount
-    ) internal {
-        (bool success, bytes memory data) = address(token).call(
-            abi.encodeWithSelector(IERC20.transfer.selector, to, amount)
-        );
-
-        require(success && (data.length == 0 || abi.decode(data, (bool))), "TRANSFER_FAILED");
+    function safeTransferFrom(IERC20 token, address from, address to, uint256 value) internal {
+        _callOptionalReturn(token, abi.encodeWithSelector(token.transferFrom.selector, from, to, value));
     }
 
-    function safeApprove(
-        IERC20 token,
-        address to,
-        uint256 amount
-    ) internal {
-        (bool success, bytes memory data) = address(token).call(
-            abi.encodeWithSelector(IERC20.approve.selector, to, amount)
+    /**
+     * @dev Deprecated. This function has issues similar to the ones found in
+     * {IERC20-approve}, and its usage is discouraged.
+     *
+     * Whenever possible, use {safeIncreaseAllowance} and
+     * {safeDecreaseAllowance} instead.
+     */
+    function safeApprove(IERC20 token, address spender, uint256 value) internal {
+        // safeApprove should only be called when setting an initial allowance,
+        // or when resetting it to zero. To increase and decrease it, use
+        // 'safeIncreaseAllowance' and 'safeDecreaseAllowance'
+        // solhint-disable-next-line max-line-length
+        require((value == 0) || (token.allowance(address(this), spender) == 0),
+            "SafeERC20: approve from non-zero to non-zero allowance"
         );
-
-        require(success && (data.length == 0 || abi.decode(data, (bool))), "APPROVE_FAILED");
+        _callOptionalReturn(token, abi.encodeWithSelector(token.approve.selector, spender, value));
     }
 
-    function safeTransferETH(address to, uint256 amount) internal {
-        (bool success, ) = to.call{value: amount}(new bytes(0));
+    function safeIncreaseAllowance(IERC20 token, address spender, uint256 value) internal {
+        uint256 newAllowance = token.allowance(address(this), spender).add(value);
+        _callOptionalReturn(token, abi.encodeWithSelector(token.approve.selector, spender, newAllowance));
+    }
 
-        require(success, "ETH_TRANSFER_FAILED");
+    function safeDecreaseAllowance(IERC20 token, address spender, uint256 value) internal {
+        uint256 newAllowance = token.allowance(address(this), spender).sub(value, "SafeERC20: decreased allowance below zero");
+        _callOptionalReturn(token, abi.encodeWithSelector(token.approve.selector, spender, newAllowance));
+    }
+
+    /**
+     * @dev Imitates a Solidity high-level call (i.e. a regular function call to a contract), relaxing the requirement
+     * on the return value: the return value is optional (but if data is returned, it must not be false).
+     * @param token The token targeted by the call.
+     * @param data The call data (encoded using abi.encode or one of its variants).
+     */
+    function _callOptionalReturn(IERC20 token, bytes memory data) private {
+        // We need to perform a low level call here, to bypass Solidity's return data size checking mechanism, since
+        // we're implementing it ourselves. We use {Address.functionCall} to perform this call, which verifies that
+        // the target address contains contract code and also asserts for success in the low-level call.
+
+        bytes memory returndata = address(token).functionCall(data, "SafeERC20: low-level call failed");
+        if (returndata.length > 0) { // Return data is optional
+            // solhint-disable-next-line max-line-length
+            require(abi.decode(returndata, (bool)), "SafeERC20: ERC20 operation did not succeed");
+        }
     }
 }
