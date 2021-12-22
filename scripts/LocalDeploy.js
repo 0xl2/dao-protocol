@@ -219,7 +219,7 @@ UNI_FACTOR: "${uniFactory.address}",
 UNI_FOUTER: "${uniRouter.address}",
 `
     
-    fs.writeFileSync('./config/local-deploy.js', config)
+    fs.writeFileSync('./config/local-deploy.txt', config)
 }
 
 main()
