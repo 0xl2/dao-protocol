@@ -812,50 +812,48 @@ contract OlympusBondDepository is Ownable {
         uint priceInUSD = bondPriceInUSD(); // Stored in bond info
         uint nativePrice = _bondPrice();
 
-        return priceInUSD;
+        require( _maxPrice >= nativePrice, "Slippage limit: more than max price" ); // slippage protection
 
-        // require( _maxPrice >= nativePrice, "Slippage limit: more than max price" ); // slippage protection
+        uint value = ITreasury( treasury ).valueOf( principle, _amount );
+        uint payout = payoutFor( value ); // payout to bonder is computed
 
-        // uint value = ITreasury( treasury ).valueOf( principle, _amount );
-        // uint payout = payoutFor( value ); // payout to bonder is computed
+        require( payout >= 10000000, "Bond too small" ); // must be > 0.01 OHM ( underflow protection )
+        require( payout <= maxPayout(), "Bond too large"); // size protection because there is no slippage
 
-        // require( payout >= 10000000, "Bond too small" ); // must be > 0.01 OHM ( underflow protection )
-        // require( payout <= maxPayout(), "Bond too large"); // size protection because there is no slippage
+        // profits are calculated
+        uint fee = payout.mul( terms.fee ).div( 10000 );
+        uint profit = value.sub( payout ).sub( fee );
 
-        // // profits are calculated
-        // uint fee = payout.mul( terms.fee ).div( 10000 );
-        // uint profit = value.sub( payout ).sub( fee );
-
-        // /**
-        //     principle is transferred in
-        //     approved and
-        //     deposited into the treasury, returning (_amount - profit) OHM
-        //  */
-        // IERC20( principle ).safeTransferFrom( msg.sender, address(this), _amount );
-        // IERC20( principle ).approve( address( treasury ), _amount );
-        // ITreasury( treasury ).deposit( _amount, principle, profit );
-        
-        // if ( fee != 0 ) { // fee is transferred to dao 
-        //     IERC20( OHM ).safeTransfer( DAO, fee ); 
-        // }
-        
-        // // total debt is increased
-        // totalDebt = totalDebt.add( value ); 
+        /**
+            principle is transferred in
+            approved and
+            deposited into the treasury, returning (_amount - profit) OHM
+         */
+        IERC20( principle ).safeTransferFrom( msg.sender, address(this), _amount );
+        IERC20( principle ).approve( address( treasury ), _amount );
+        ITreasury( treasury ).deposit( _amount, principle, profit );
                 
-        // // depositor info is stored
-        // bondInfo[ _depositor ] = Bond({ 
-        //     payout: bondInfo[ _depositor ].payout.add( payout ),
-        //     vesting: terms.vestingTerm,
-        //     lastBlock: block.number,
-        //     pricePaid: priceInUSD
-        // });
+        if ( fee != 0 ) { // fee is transferred to dao 
+            IERC20( OHM ).safeTransfer( DAO, fee ); 
+        }
+        
+        // total debt is increased
+        totalDebt = totalDebt.add( value ); 
+                
+        // depositor info is stored
+        bondInfo[ _depositor ] = Bond({ 
+            payout: bondInfo[ _depositor ].payout.add( payout ),
+            vesting: terms.vestingTerm,
+            lastBlock: block.number,
+            pricePaid: priceInUSD
+        });
 
-        // // indexed events are emitted
-        // emit BondCreated( _amount, payout, block.number.add( terms.vestingTerm ), priceInUSD );
-        // emit BondPriceChanged( bondPriceInUSD(), _bondPrice(), debtRatio() );
+        // indexed events are emitted
+        emit BondCreated( _amount, payout, block.number.add( terms.vestingTerm ), priceInUSD );
+        emit BondPriceChanged( bondPriceInUSD(), _bondPrice(), debtRatio() );
 
-        // adjust(); // control variable is adjusted
-        // return payout; 
+        adjust(); // control variable is adjusted
+        return payout; 
     }
 
     /** 

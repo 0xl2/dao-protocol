@@ -107,19 +107,6 @@ async function main() {
     // const uniRouterAddress = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D"
     // const sushiRouterAddress = "0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506"
     
-    await dai.approve(uniRouter.address, ethers.utils.parseUnits("100", 'ether'));
-    await ohm.approve(uniRouter.address, ethers.utils.parseUnits("10", 'gwei'));
-    await uniRouter.addLiquidity(
-        dai.address,
-        ohm.address,
-        ethers.utils.parseUnits("100", 'ether'), 
-        ethers.utils.parseUnits("10", 'gwei'),
-        ethers.utils.parseUnits("1", 'ether'), 
-        ethers.utils.parseUnits("1", 'ether'),
-        deployer.address,
-        (await ethers.provider.getBlock()).timestamp + 12000
-    );
-
     const Migrator = await ethers.getContractFactory("OlympusTokenMigrator");
     const migrator = await Migrator.deploy(
         oldOHM.address,
@@ -147,8 +134,12 @@ async function main() {
     await oldTreasury.connect(deployer).toggle(2, pairDaiOOHM, pairDaiOOHM);
     await oldTreasury.connect(deployer).toggle(2, pairDaiOHM, pairDaiOHM);
 
+    
     await olympusTreasury.connect(deployer).queue(0, migratorAddress);
     await olympusTreasury.connect(deployer).toggle(0, migratorAddress, migratorAddress);
+
+    await olympusTreasury.connect(deployer).queue(2, pairDaiOHM);
+    await olympusTreasury.connect(deployer).toggle(2, pairDaiOHM, pairDaiOHM);
 
     // await olympusTreasury.connect(deployer).enable(5, dai.address, dai.address);
 
@@ -189,15 +180,33 @@ async function main() {
     const BondDepository = await ethers.getContractFactory("OlympusBondDepository")
     const bondDepository = await BondDepository.deploy(
         ohm.address,
-        pairDaiOHM,
+        // pairDaiOHM,
+        dai.address,
         olympusTreasury.address,
         sOHM.address,
-        bondCalculator.address
+        ethers.constants.AddressZero
+        // bondCalculator.address
     );
     await bondDepository.deployed();
+
+    await olympusTreasury.connect(deployer).queue(0, bondDepository.address);
+    await olympusTreasury.connect(deployer).toggle(0, bondDepository.address, bondDepository.address);
+
+    await dai.approve(uniRouter.address, ethers.utils.parseUnits("100", 'ether'));
+    await ohm.approve(uniRouter.address, ethers.utils.parseUnits("10", 'gwei'));
+    await uniRouter.addLiquidity(
+        dai.address,
+        ohm.address,
+        ethers.utils.parseUnits("100", 'ether'), 
+        ethers.utils.parseUnits("10", 'gwei'),
+        ethers.utils.parseUnits("1", 'ether'), 
+        ethers.utils.parseUnits("1", 'ether'),
+        bondDepository.address,
+        (await ethers.provider.getBlock()).timestamp + 12000
+    );
     
     // very important for bonding depository
-    await bondDepository.initializeBondTerms(100, 10000, 100, 1000, 500, 10000, 1000);
+    await bondDepository.initializeBondTerms(ethers.utils.parseUnits("1", 'gwei'), 10000, 100, 1000, 500, 10000, 1000);
 
 const config = `DAI_ADDRESS: "${dai.address}",
 OHM_ADDRESS: "${ohm.address}",
