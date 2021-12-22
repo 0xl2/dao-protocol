@@ -200,7 +200,7 @@ async function main() {
         ethers.utils.parseUnits("100", 'ether'), 
         ethers.utils.parseUnits("10", 'gwei'),
         ethers.utils.parseUnits("1", 'ether'), 
-        ethers.utils.parseUnits("1", 'ether'),
+        ethers.utils.parseUnits("1", 'gwei'),
         bondDepository.address,
         (await ethers.provider.getBlock()).timestamp + 12000
     );
