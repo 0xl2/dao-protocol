@@ -38,7 +38,7 @@ contract UniswapV2Factory is IUniswapV2Factory {
         emit PairCreated(token0, token1, pair, allPairs.length);
     }
 
-    function getHash() public returns(bytes32 encodeCode) {
+    function getHash() public view returns(bytes32 encodeCode) {
         encodeCode = keccak256(abi.encodePacked(type(UniswapV2Pair).creationCode));
     }
 

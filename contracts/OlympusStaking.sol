@@ -4,6 +4,7 @@ pragma solidity 0.7.5;
 import "./libraries/SafeMath.sol";
 import "./libraries/SafeERC20.sol";
 import "./libraries/Address.sol";
+import "./interfaces/IWarmup.sol";
 
 interface IOwnable {
   function manager() external view returns (address);
@@ -67,10 +68,6 @@ interface IsOHM {
     function balanceForGons( uint gons ) external view returns ( uint );
     
     function index() external view returns ( uint );
-}
-
-interface IWarmup {
-    function retrieve( address staker_, uint amount_ ) external;
 }
 
 interface IDistributor {

@@ -6,6 +6,14 @@ async function main() {
     const firstEpochNumber = "550";
     const firstBlockNumber = "9505000";
 
+    const daiMintVal = 100000;
+
+    const daiMint = ethers.utils.parseUnits(daiMintVal.toString(), 'ether');
+    const ohmMint = ethers.utils.parseUnits("10000", 'gwei');
+
+    const daiPair = ethers.utils.parseUnits("10000", 'ether');
+    const ohmPair = ethers.utils.parseUnits("1000", 'gwei');
+
     const [deployer] = await ethers.getSigners();
     console.log("Deploying contracts with the account: " + deployer.address);
 
@@ -13,7 +21,7 @@ async function main() {
     const dai = await DAI.deploy(1337)
     await dai.deployed()
 
-    await dai.connect(deployer).mint(deployer.address, ethers.utils.parseUnits("1000", 'ether'));
+    await dai.connect(deployer).mint(deployer.address, daiMint);
 
     const OldOHM = await ethers.getContractFactory("OldOlympusERC20Token")
     const oldOHM = await OldOHM.deploy()
@@ -50,7 +58,7 @@ async function main() {
     await ohm.deployed()
 
     // mint ohm to test account
-    await ohm.connect(deployer).mint(deployer.address, 1e12)
+    await ohm.connect(deployer).mint(deployer.address, ohmMint)
 
     const SOHM = await ethers.getContractFactory("sOlympus");
     const sOHM = await SOHM.deploy();
@@ -66,18 +74,36 @@ async function main() {
 
     await authority.pushVault(olympusTreasury.address, true);
 
+    const blockNumber = (await ethers.provider.getBlock()).number;
     const Staking = await ethers.getContractFactory("OlympusStaking");
     const staking = await Staking.deploy(
         ohm.address,
         sOHM.address,
         "2200",
-        firstEpochNumber,
-        firstBlockNumber
+        blockNumber,
+        blockNumber
     );
     await staking.deployed();
-    
+
+    // distributor contract
+    const Distributor = await ethers.getContractFactory("Distributor");
+    const distributor = await Distributor.deploy(
+        olympusTreasury.address,
+        ohm.address,
+        staking.address,
+        authority.address
+    );
+    await distributor.deployed()
+
+    // warmup contract
+    const StakingWarmup = await ethers.getContractFactory("StakingWarmup");
+    const stakingWarmup = await StakingWarmup.deploy(staking.address, sOHM.address);
+    await stakingWarmup.deployed();
+
     // initialize warmup
-    await staking.connect(deployer).setWarmup(2);
+    await staking.connect(deployer).setWarmup(0);
+    // await staking.connect(deployer).setContract(0, distributor.address);
+    await staking.connect(deployer).setContract(1, stakingWarmup.address);
 
     const UniFactory = await ethers.getContractFactory("UniswapV2Factory")
     const uniFactory = await UniFactory.deploy(deployer.address)
@@ -134,7 +160,6 @@ async function main() {
     await oldTreasury.connect(deployer).toggle(2, pairDaiOOHM, pairDaiOOHM);
     await oldTreasury.connect(deployer).toggle(2, pairDaiOHM, pairDaiOHM);
 
-    
     await olympusTreasury.connect(deployer).queue(0, migratorAddress);
     await olympusTreasury.connect(deployer).toggle(0, migratorAddress, migratorAddress);
 
@@ -155,15 +180,6 @@ async function main() {
     await sOHM.setIndex("0");
     // await sOHM.setgOHM(gOHM.address);
     await sOHM.initialize(staking.address);
-
-    const Distributor = await ethers.getContractFactory("Distributor");
-    const distributor = await Distributor.deploy(
-        olympusTreasury.address,
-        ohm.address,
-        staking.address,
-        authority.address
-    );
-    await distributor.deployed()
 
     const StakingHelper = await ethers.getContractFactory("StakingHelper")
     const stakingHelper = await StakingHelper.deploy(staking.address, ohm.address)
@@ -192,23 +208,24 @@ async function main() {
     await olympusTreasury.connect(deployer).queue(0, bondDepository.address);
     await olympusTreasury.connect(deployer).toggle(0, bondDepository.address, bondDepository.address);
 
-    await dai.approve(uniRouter.address, ethers.utils.parseUnits("100", 'ether'));
-    await ohm.approve(uniRouter.address, ethers.utils.parseUnits("10", 'gwei'));
+    await dai.approve(uniRouter.address, daiPair);
+    await ohm.approve(uniRouter.address, ohmPair);
     await uniRouter.addLiquidity(
         dai.address,
         ohm.address,
-        ethers.utils.parseUnits("100", 'ether'), 
+        daiPair, 
+        ohmPair,
+        ethers.utils.parseUnits("10", 'ether'), 
         ethers.utils.parseUnits("10", 'gwei'),
-        ethers.utils.parseUnits("1", 'ether'), 
-        ethers.utils.parseUnits("1", 'gwei'),
         bondDepository.address,
         (await ethers.provider.getBlock()).timestamp + 12000
     );
     
     // very important for bonding depository
-    await bondDepository.initializeBondTerms(ethers.utils.parseUnits("1", 'gwei'), 10000, 100, 1000, 500, 10000, 1000);
+    await bondDepository.initializeBondTerms(ethers.utils.parseUnits("1", 'gwei'), 10000, 100, 1000, 500, daiMintVal, daiMintVal);
 
-const config = `DAI_ADDRESS: "${dai.address}",
+const config = `DAI_BOND_DEPOSITORY: "${bondDepository.address}",
+DAI_ADDRESS: "${dai.address}",
 OHM_ADDRESS: "${ohm.address}",
 STAKING_ADDRESS: "${staking.address}",
 STAKING_HELPER_ADDRESS: "${stakingHelper.address}",
@@ -221,9 +238,9 @@ REDEEM_HELPER_ADDRESS: "${redeemHelper.address}",
 WSOHM_ADDRESS: "${wsOHM.address}",
 GOHM_ADDRESS: "${gOHM.address}",
 MIGRATOR_ADDRESS: "${migratorAddress}",
-DAI_BOND_DEPOSITORY: "${bondDepository.address}",
 DAI_OLD_OHM_PAIR: "${pairDaiOOHM}",
 DAI_OHM_PAIR: "${pairDaiOHM}",
+DISTRIBUTOR: "${distributor.address}",
 UNI_FACTOR: "${uniFactory.address}",
 UNI_FOUTER: "${uniRouter.address}",
 `
