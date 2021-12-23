@@ -5,12 +5,13 @@ import "./libraries/SafeERC20.sol";
 import "./abstract/ReentrancyGuard.sol";
 import "./abstract/AccessControl.sol";
 
-contract OlympusLimit is AccessControl, ReentrancyGuard {
+contract OlympusLock is AccessControl, ReentrancyGuard {
     using SafeERC20 for IERC20;
 
-    address public immutable UMAMI;
-    address public immutable sUMAMI;
+    address public immutable OHM;
+    address public immutable SOHM;
     // address public immutable wsUMAMI;
+
     uint256 public totalStaked = 0;
     uint256 public totalMultipliedStaked = 0;
     mapping(address => uint256) public excessTokenRewards;
@@ -45,23 +46,25 @@ contract OlympusLimit is AccessControl, ReentrancyGuard {
 
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
 
-    constructor(address _UMAMI, address _sUMAMI) {
-        UMAMI = _UMAMI;
-        sUMAMI = _sUMAMI;
+    constructor(address _OHM, address _sOHM) {
+        OHM = _OHM;
+        SOHM = _sOHM;
         // wsUMAMI = _wsUMAMI;
+
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _grantRole(ADMIN_ROLE, msg.sender);
-        rewardTokens.push(_UMAMI);
-        isApprovedRewardToken[_UMAMI] = true;
+        
+        rewardTokens.push(_sOHM);
+        isApprovedRewardToken[_sOHM] = true;
     }
 
     function addReward(address token, uint256 amount) external nonReentrant {
         require(isApprovedRewardToken[token], "Token is not approved for rewards");
         IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
         if (totalStaked == 0) {
-        // Rewards which nobody is eligible for
-        excessTokenRewards[token] += amount;
-        return;
+            // Rewards which nobody is eligible for
+            excessTokenRewards[token] += amount;
+            return;
         }
         uint256 rewardPerStake = (amount * SCALE) / totalMultipliedStaked;
         require(rewardPerStake > 0, "insufficient reward per stake");

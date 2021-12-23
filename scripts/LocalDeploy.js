@@ -2,7 +2,8 @@ const { ethers } = require("hardhat");
 const fs = require('fs');
 
 async function main() {
-    const epochLength = "2200"
+    const initVal = 1;
+    const epochLength = "1" // need to update
     const firstEpochNumber = "550";
     const firstBlockNumber = "9505000";
 
@@ -71,9 +72,7 @@ async function main() {
     const OlympusTreasury = await ethers.getContractFactory("OlympusTreasury");
     const olympusTreasury = await OlympusTreasury.deploy(ohm.address, dai.address, dai.address, "0")
     await olympusTreasury.deployed()
-
-    await authority.pushVault(olympusTreasury.address, true);
-
+    
     const blockNumber = (await ethers.provider.getBlock()).number;
     const Staking = await ethers.getContractFactory("OlympusStaking");
     const staking = await Staking.deploy(
@@ -104,6 +103,9 @@ async function main() {
     await staking.connect(deployer).setWarmup(0);
     // await staking.connect(deployer).setContract(0, distributor.address);
     await staking.connect(deployer).setContract(1, stakingWarmup.address);
+
+    await ohm.connect(deployer).mint(staking.address, ethers.utils.parseUnits(initVal.toString(), 'gwei'))
+    await authority.pushVault(olympusTreasury.address, true);
 
     const UniFactory = await ethers.getContractFactory("UniswapV2Factory")
     const uniFactory = await UniFactory.deploy(deployer.address)
@@ -222,7 +224,8 @@ async function main() {
     );
     
     // very important for bonding depository
-    await bondDepository.initializeBondTerms(ethers.utils.parseUnits("1", 'gwei'), 10000, 100, 1000, 500, daiMintVal, daiMintVal);
+    const daiVal = daiMintVal + initVal;
+    await bondDepository.initializeBondTerms(ethers.utils.parseUnits("1", 'gwei'), 10000, 100, 1000, 500, daiVal, daiVal);
 
 const config = `DAI_BOND_DEPOSITORY: "${bondDepository.address}",
 DAI_ADDRESS: "${dai.address}",
