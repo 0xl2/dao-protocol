@@ -174,7 +174,7 @@ async function main() {
     const gOHM = await GOHM.deploy(migratorAddress, sOHM.address)
     await gOHM.deployed()
 
-    await migrator.migrateContracts(olympusTreasury.address, staking.address, ohm.address, sOHM.address, dai.address)
+    await migrator.migrateContracts(olympusTreasury.address, staking.address, ohm.address, dai.address);
     // add liquidity to the pool
     // console.log(await migrator.callStatic.migrateLP(pairDaiOOHM, false, dai.address, ethers.utils.parseUnits("10", 'ether'), ethers.utils.parseUnits("10", 'ether')));
     
@@ -183,9 +183,16 @@ async function main() {
     // await sOHM.setgOHM(gOHM.address);
     await sOHM.initialize(staking.address);
 
-    const StakingHelper = await ethers.getContractFactory("StakingHelper")
-    const stakingHelper = await StakingHelper.deploy(staking.address, ohm.address)
-    await stakingHelper.deployed()
+    const PrismLock = await ethers.getContractFactory("PrismLock");
+    const prismLock = await PrismLock.deploy(sOHM.address);
+    await prismLock.deployed();
+
+    const StakingHelper = await ethers.getContractFactory("StakingHelper");
+    const stakingHelper = await StakingHelper.deploy(staking.address, prismLock.address, ohm.address);
+    await stakingHelper.deployed();
+
+    await staking.connect(deployer).setContract(2, prismLock.address);
+    await prismLock.connect(deployer).setHelper(stakingHelper.address);
 
     const BondCalculator = await ethers.getContractFactory("OlympusBondingCalculator")
     const bondCalculator = await BondCalculator.deploy(ohm.address)

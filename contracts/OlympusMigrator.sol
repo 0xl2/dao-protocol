@@ -639,7 +639,6 @@ contract OlympusTokenMigrator is OlympusAccessControlled {
         address _newTreasury,
         address _newStaking,
         address _newOHM,
-        address _newsOHM,
         address _reserve
     ) external onlyGovernor {
         require(!ohmMigrated, "Already migrated");

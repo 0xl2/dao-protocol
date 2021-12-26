@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 pragma solidity 0.7.5;
 
+import "./interfaces/IPrismLock.sol";
+
 interface IERC20 {
     function decimals() external view returns (uint8);
   /**
@@ -75,24 +77,36 @@ interface IERC20 {
 
 interface IStaking {
     function stake( uint _amount, address _recipient ) external returns ( bool );
+    function lock( address _recipient, uint _amount, uint _estimate ) external returns ( bool );
     function claim( address _recipient ) external;
+    function claimLock( address _recipient ) external;
 }
 
 contract StakingHelper {
     address public immutable staking;
+    address public immutable locker;
     address public immutable OHM;
 
-    constructor ( address _staking, address _OHM ) {
+    constructor ( address _staking, address _locker, address _OHM ) {
         require( _staking != address(0) );
         staking = _staking;
         require( _OHM != address(0) );
         OHM = _OHM;
+        require( _locker != address(0) );
+        locker = _locker;
     }
 
-    function stake( uint _amount ) external {
+    function stake( uint _amount, uint32 _duration ) external {
         IERC20( OHM ).transferFrom( msg.sender, address(this), _amount );
         IERC20( OHM ).approve( staking, _amount );
-        IStaking( staking ).stake( _amount, msg.sender );
-        IStaking( staking ).claim( msg.sender );
+        if(_duration == 0) {
+            IStaking( staking ).stake( _amount, msg.sender );
+            IStaking( staking ).claim( msg.sender );
+        } else {
+            uint estimate = IPrismLock(locker).estimateAmount(_duration, _amount);
+            IStaking( staking ).lock( msg.sender, _amount, estimate );
+            IPrismLock( locker ).lock(msg.sender, _amount, _duration);
+            IStaking( staking ).claimLock( msg.sender );
+        }
     }
 }

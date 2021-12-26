@@ -161,6 +161,38 @@ contract OlympusStaking is Ownable {
         }
     }
 
+    function claimLock( address _recipient ) public {
+        Claim memory info = warmupInfo[ _recipient ];
+        if ( epoch.number >= info.expiry && info.expiry != 0 ) {
+            delete warmupInfo[ _recipient ];
+            IWarmup( warmupContract ).retrieve( locker, info.gons);
+        }
+    }
+
+    /**
+        @notice stake OHM to ender lock
+        @param _amount uint
+        @return bool
+     */
+    function lock( address _recipient, uint _amount, uint _estimate ) external returns ( bool ) {
+        rebase();
+        
+        IERC20( OHM ).safeTransferFrom( msg.sender, address(this), _amount );
+
+        Claim memory info = warmupInfo[ _recipient ];
+        require( !info.lock, "Deposits for account are locked" );
+
+        warmupInfo[ _recipient ] = Claim ({
+            deposit: info.deposit.add( _amount ),
+            gons: info.gons.add( _estimate ),
+            expiry: epoch.number.add( warmupPeriod ),
+            lock: false
+        });
+        
+        IERC20( sOHM ).safeTransfer( warmupContract, _amount );
+        return true;
+    }
+
     /**
         @notice forfeit sOHM in warmup and retrieve OHM
      */
