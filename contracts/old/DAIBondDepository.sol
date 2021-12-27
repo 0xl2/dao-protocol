@@ -832,7 +832,7 @@ contract OlympusBondDepository is Ownable {
         IERC20( principle ).safeTransferFrom( msg.sender, address(this), _amount );
         IERC20( principle ).approve( address( treasury ), _amount );
         ITreasury( treasury ).deposit( _amount, principle, profit );
-                
+
         if ( fee != 0 ) { // fee is transferred to dao 
             IERC20( OHM ).safeTransfer( DAO, fee ); 
         }

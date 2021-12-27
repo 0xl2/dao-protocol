@@ -6,7 +6,6 @@ import "./interfaces/ITreasury.sol";
 import "./interfaces/IOlympusAuthority.sol";
 import "./interfaces/ITreasuryV1.sol";
 import "./interfaces/IStakingV1.sol";
-import "./interfaces/IOwnable.sol";
 import "./interfaces/IStaking.sol";
 import "./interfaces/IsOHM.sol";
 import "./interfaces/IUniswapV2Router.sol";
