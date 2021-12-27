@@ -12,3 +12,5 @@ artifacts
 config/config.json
 config/deploy.js
 config/local-deploy.txt
+
+scripts/LocalDeply.js
