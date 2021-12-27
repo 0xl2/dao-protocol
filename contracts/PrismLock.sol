@@ -168,7 +168,8 @@ contract PrismLock is Ownable {
         require(lockUnits[duration] > 0, "Lock: Invalid duration");
 
         // check duration
-        require(getDuration() == duration, "Lock: Invalid duration");
+        uint32 userDuration = getDuration();
+        require(userDuration == 0 || getDuration() == duration, "Lock: Invalid duration");
 
         uint startTime = block.timestamp;
         _lock(locker, startTime, amount, duration);
