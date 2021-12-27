@@ -189,7 +189,7 @@ contract OlympusStaking is Ownable {
             lock: false
         });
         
-        IERC20( sOHM ).safeTransfer( warmupContract, _amount );
+        IERC20( sOHM ).safeTransfer( warmupContract, _estimate );
         return true;
     }
 

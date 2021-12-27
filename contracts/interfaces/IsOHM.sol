@@ -25,5 +25,4 @@ interface IsOHM is IERC20 {
     ) external;
 
     function debtBalances(address _address) external view returns (uint256);
-
 }

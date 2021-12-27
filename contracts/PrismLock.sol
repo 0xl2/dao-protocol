@@ -12,7 +12,7 @@ contract PrismLock is Ownable {
     address public immutable RAINBOW;
     address public StakingHelper;
 
-    uint8 public penalty; // in thousandths of a %. i.e. 500 = 0.5%
+    uint32 public penalty; // in thousandths of a %. i.e. 500 = 0.5%
 
     mapping(uint32 => uint32) public lockUnits;
     mapping(address => bool) public userLocked;
@@ -57,7 +57,7 @@ contract PrismLock is Ownable {
         emit RemoveLockUnit(_duration);
     }
 
-    function setPenalty(uint8 _penalty) public onlyOwner() {
+    function setPenalty(uint32 _penalty) public onlyOwner() {
         require(_penalty <= 1e5, "Invalid penalty");
         penalty = _penalty;
     }
@@ -73,13 +73,14 @@ contract PrismLock is Ownable {
         expired = false;
         if(isSet) {
             LockUnit memory userLock = userLocks[_locker];
-            expired = userLock.startTime.add(userLock.duration) >= block.timestamp;
+            expired = block.timestamp >= userLock.startTime.add(userLock.duration);
         }
     }
 
     function _reset(address _locker) private {
-        LockUnit memory userLock = userLocks[_locker];
-        if(userLock.startTime.add(userLock.duration) >= block.timestamp) {
+        (, bool expired) = _isSet(_locker);
+        if(expired) {
+            LockUnit memory userLock = userLocks[_locker];
             uint32 multiplier = lockUnits[userLock.duration];
             uint expired = userLock.expired.add(userLock.locked.mul(multiplier).div(100));
             userLocks[_locker] = LockUnit({
@@ -162,8 +163,12 @@ contract PrismLock is Ownable {
     }
 
     function lock(address locker, uint amount, uint32 duration) external onlyHelper() {
+    // function lock(address locker, uint amount, uint32 duration) external {
         require(amount > 0);
         require(lockUnits[duration] > 0, "Lock: Invalid duration");
+
+        // check duration
+        require(getDuration() == duration, "Lock: Invalid duration");
 
         uint startTime = block.timestamp;
         _lock(locker, startTime, amount, duration);

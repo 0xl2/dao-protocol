@@ -186,6 +186,13 @@ async function main() {
     const PrismLock = await ethers.getContractFactory("PrismLock");
     const prismLock = await PrismLock.deploy(sOHM.address);
     await prismLock.deployed();
+    
+    const daySec = 86400;
+    await prismLock.setPenalty(10000); // set penalty 10%
+    await prismLock.addLockUnit(daySec * 14, 115);
+    await prismLock.addLockUnit(daySec * 30, 115);
+    await prismLock.addLockUnit(daySec * 90, 115);
+    await prismLock.addLockUnit(daySec * 180, 115);
 
     const StakingHelper = await ethers.getContractFactory("StakingHelper");
     const stakingHelper = await StakingHelper.deploy(staking.address, prismLock.address, ohm.address);
@@ -245,6 +252,7 @@ OLD_SOHM_ADDRESS: "${oldSOHM.address}",
 BONDINGCALC_ADDRESS: "${bondCalculator.address}",
 TREASURY_ADDRESS: "${olympusTreasury.address}",
 REDEEM_HELPER_ADDRESS: "${redeemHelper.address}",
+PRISM_LOCKER: "${prismLock.address}",
 WSOHM_ADDRESS: "${wsOHM.address}",
 GOHM_ADDRESS: "${gOHM.address}",
 MIGRATOR_ADDRESS: "${migratorAddress}",

@@ -1,4 +1,5 @@
 require("@nomiclabs/hardhat-waffle");
+require("@typechain/hardhat");
 const keyConfig = require('./config/config.json');
 
 // This is a sample Hardhat task. To learn how to create your own go to
@@ -97,5 +98,9 @@ module.exports = {
         runs: 200
       }
     },
+  },
+  typechain: {
+    outDir: "typechain",
+    target: "ethers-v5",
   },
 };

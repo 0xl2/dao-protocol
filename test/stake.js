@@ -1,6 +1,6 @@
 const { ethers } = require("hardhat");
 
-describe.only("Staking test", () => {
+describe("Staking test", () => {
     let deployer;
     before(async () => {
         [deployer] = await ethers.getSigners();
@@ -9,13 +9,17 @@ describe.only("Staking test", () => {
     it("get sohm", async() => {
         try {
             const blockNumber = (await ethers.provider.getBlock()).number;
-            const stakeAddress = "0xC9e221e1cf3eFBeD2FEcbBCf705c68E45B88A13a";
-            const sOHMAdress = "0x48F9Efc1C89DC80f9aA51778C93FAe09373bD81C"
-            const helperAddress = "0xF2cE89fa77c519b48Ff172b1355a66FfB2Ab0b23"
+            const stakeAddress = "0xe5bCCA69642AA34efD96596A4BA9f9BA7F9E3787";
+            const sOHMAdress = "0x800023c32c60Ff44CCD524c9fe7A11A8B13085Aa"
+            const helperAddress = "0xaA727FFB2716a2a1a41b0fcdf025283A8f49dE52"
+            const lockAddress = "0xC35949Ddc305A8945775401cd1d46F9487B8F17C";
+
+            const dayinSec = 86400;
 
             const sOHM = await ethers.getContractAt("sOlympus", sOHMAdress);
             const stakingHelper = await ethers.getContractAt("StakingHelper", helperAddress);
             const stakingContract = await ethers.getContractAt("OlympusStaking", stakeAddress);
+            const lockContract = await ethers.getContractAt("PrismLock", lockAddress);
             
             // const Staking = await ethers.getContractFactory("OlympusStaking");
             // const ohmAddress = "0x19f9bc336A2c6fB25474ae313B5f7B64c7F69d58";
@@ -34,9 +38,13 @@ describe.only("Staking test", () => {
             console.log(await sOHM.callStatic.circulatingSupply(), "circulatingSupply");
             console.log(await stakingContract.callStatic.contractBalance(), "contractBalance");
 
+            const amount = ethers.utils.parseUnits("200", "gwei");
+            console.log(await lockContract.callStatic.lockUnits(dayinSec * 14))
+            console.log(await lockContract.callStatic.estimateAmount(dayinSec * 14, amount))
+
             // await stakingContract.setContract(0, ethers.constants.AddressZero)
             // await stakingContract.connect(deployer).setWarmup(0);
-            // console.log(await stakingHelper.connect(deployer).callStatic.stake(ethers.utils.parseUnits("20", "gwei")));
+            console.log(await stakingHelper.connect(deployer).callStatic.stake(amount, 1209600));
             // console.log(await stakingContract.callStatic.rebase());
             const epoch = await stakingContract.callStatic.epoch();
             console.log(epoch, blockNumber);
