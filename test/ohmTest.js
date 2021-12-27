@@ -35,7 +35,7 @@ describe("OHM transfer test", () => {
             // await treasury.connect(deployer).toggle(0, bondDepoAddr, bondDepoAddr);
             console.log(await treasury.isReserveToken(daiAddress), "isReserveToken");
 
-            const ohm = await ethers.getContractAt("OlympusERC20Token", "0x2be17B6e931Ea15EfECb234bC772444d66558856");
+            const ohm = await ethers.getContractAt("PrismERC20Token", "0x2be17B6e931Ea15EfECb234bC772444d66558856");
             console.log(await ohm.callStatic.totalSupply(), "totalSupply");
             
             console.log(await bondDepository.callStatic.currentDebt(), "currentDebt");

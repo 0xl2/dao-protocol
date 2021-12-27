@@ -10,10 +10,10 @@ async function main() {
     const daiMintVal = 100000;
 
     const daiMint = ethers.utils.parseUnits(daiMintVal.toString(), 'ether');
-    const ohmMint = ethers.utils.parseUnits("10000", 'gwei');
+    const prismMint = ethers.utils.parseUnits("10000", 'gwei');
 
     const daiPair = ethers.utils.parseUnits("10000", 'ether');
-    const ohmPair = ethers.utils.parseUnits("1000", 'gwei');
+    const prismPair = ethers.utils.parseUnits("1000", 'gwei');
 
     const [deployer] = await ethers.getSigners();
     console.log("Deploying contracts with the account: " + deployer.address);
@@ -24,18 +24,18 @@ async function main() {
 
     await dai.connect(deployer).mint(deployer.address, daiMint);
 
-    const OldOHM = await ethers.getContractFactory("OldOlympusERC20Token")
-    const oldOHM = await OldOHM.deploy()
-    await oldOHM.deployed()
+    const OldPrism = await ethers.getContractFactory("OldPrismERC20Token")
+    const oldPrism = await OldPrism.deploy()
+    await oldPrism.deployed()
 
-    const OldSOHM = await ethers.getContractFactory("OldSOlympus")
-    const oldSOHM = await OldSOHM.deploy()
-    await oldSOHM.deployed()
+    const OldRainbow = await ethers.getContractFactory("OldRainbow")
+    const oldRainbow = await OldRainbow.deploy()
+    await oldRainbow.deployed()
 
     const OldStaking = await ethers.getContractFactory("OldOlympusStaking")
     const oldStaking = await OldStaking.deploy(
-        oldOHM.address,
-        oldSOHM.address,
+        oldPrism.address,
+        oldRainbow.address,
         epochLength,
         firstEpochNumber,
         firstBlockNumber
@@ -43,41 +43,45 @@ async function main() {
     await oldStaking.deployed()
 
     const OldWSOHM = await ethers.getContractFactory("OldWOHM")
-    const oldWSOHM = await OldWSOHM.deploy(oldSOHM.address)
+    const oldWSOHM = await OldWSOHM.deploy(oldRainbow.address)
     await oldWSOHM.deployed()
 
     const OldTreasury = await ethers.getContractFactory("OldOlympusTreasury")
-    const oldTreasury = await OldTreasury.deploy(oldOHM.address, dai.address, 0)
+    const oldTreasury = await OldTreasury.deploy(oldPrism.address, dai.address, 0)
     await oldTreasury.deployed()
 
     const Authority = await ethers.getContractFactory("OlympusAuthority")
     const authority = await Authority.deploy(deployer.address, deployer.address, deployer.address, deployer.address)
     await authority.deployed()
 
-    const OHM = await ethers.getContractFactory("OlympusERC20Token");
-    const ohm = await OHM.deploy(authority.address);
-    await ohm.deployed()
+    const PrismWallet = await ethers.getContractFactory("PrismWallet");
+    const prismWallet = await PrismWallet.deploy();
+    await prismWallet.deployed();
 
-    // mint ohm to test account
-    await ohm.connect(deployer).mint(deployer.address, ohmMint)
+    const Prism = await ethers.getContractFactory("PrismERC20Token");
+    const prism = await Prism.deploy(authority.address, prismWallet.address);
+    await prism.deployed()
 
-    const SOHM = await ethers.getContractFactory("sOlympus");
-    const sOHM = await SOHM.deploy();
-    await sOHM.deployed()
+    // mint prism to test account
+    await prism.connect(deployer).mint(deployer.address, prismMint)
+
+    const Rainbow = await ethers.getContractFactory("RainbowERC20");
+    const rainbow = await Rainbow.deploy();
+    await rainbow.deployed()
 
     const WSOHM = await ethers.getContractFactory("wOHM");
-    const wsOHM = await WSOHM.deploy(sOHM.address)
+    const wsOHM = await WSOHM.deploy(rainbow.address)
     await wsOHM.deployed()
 
     const OlympusTreasury = await ethers.getContractFactory("OlympusTreasury");
-    const olympusTreasury = await OlympusTreasury.deploy(ohm.address, dai.address, dai.address, "0")
+    const olympusTreasury = await OlympusTreasury.deploy(prism.address, dai.address, dai.address, "0")
     await olympusTreasury.deployed()
     
     const blockNumber = (await ethers.provider.getBlock()).number;
     const Staking = await ethers.getContractFactory("OlympusStaking");
     const staking = await Staking.deploy(
-        ohm.address,
-        sOHM.address,
+        prism.address,
+        rainbow.address,
         "2200",
         blockNumber,
         blockNumber
@@ -88,7 +92,7 @@ async function main() {
     const Distributor = await ethers.getContractFactory("Distributor");
     const distributor = await Distributor.deploy(
         olympusTreasury.address,
-        ohm.address,
+        prism.address,
         staking.address,
         authority.address
     );
@@ -96,7 +100,7 @@ async function main() {
 
     // warmup contract
     const StakingWarmup = await ethers.getContractFactory("StakingWarmup");
-    const stakingWarmup = await StakingWarmup.deploy(staking.address, sOHM.address);
+    const stakingWarmup = await StakingWarmup.deploy(staking.address, rainbow.address);
     await stakingWarmup.deployed();
 
     // initialize warmup
@@ -104,7 +108,7 @@ async function main() {
     // await staking.connect(deployer).setContract(0, distributor.address);
     await staking.connect(deployer).setContract(1, stakingWarmup.address);
 
-    await ohm.connect(deployer).mint(staking.address, ethers.utils.parseUnits(initVal.toString(), 'gwei'))
+    await prism.connect(deployer).mint(staking.address, ethers.utils.parseUnits(initVal.toString(), 'gwei'))
     await authority.pushVault(olympusTreasury.address, true);
 
     const UniFactory = await ethers.getContractFactory("UniswapV2Factory")
@@ -115,15 +119,15 @@ async function main() {
 
     // console.log(await uniFactory.callStatic.getHash())
 
-    // create pair dai/ohm, dai/old ohm
-    await uniFactory.createPair(dai.address, oldOHM.address)
-    await uniFactory.createPair(dai.address, ohm.address)
+    // create pair dai/prism, dai/old_prism
+    await uniFactory.createPair(dai.address, oldPrism.address)
+    await uniFactory.createPair(dai.address, prism.address)
 
     // const uniFacotry1 = await ethers.getContractAt("UniswapV2Factory",uniFactory.address);
-    const pairDaiOHM = await uniFactory.getPair(dai.address, ohm.address);
-    const pairDaiOOHM = await uniFactory.getPair(dai.address, oldOHM.address);
+    const pairDaiPrism = await uniFactory.getPair(dai.address, prism.address);
+    const pairDaiOPrism = await uniFactory.getPair(dai.address, oldPrism.address);
 
-    console.log(pairDaiOOHM, pairDaiOHM);
+    console.log(pairDaiOPrism, pairDaiPrism);
 
     const WETHToken = await ethers.getContractFactory("WETHToken")
     const wethToken = await WETHToken.deploy()
@@ -137,8 +141,8 @@ async function main() {
     
     const Migrator = await ethers.getContractFactory("OlympusTokenMigrator");
     const migrator = await Migrator.deploy(
-        oldOHM.address,
-        oldSOHM.address,
+        oldPrism.address,
+        oldRainbow.address,
         oldTreasury.address,
         oldStaking.address,
         oldWSOHM.address,
@@ -153,38 +157,37 @@ async function main() {
     await oldTreasury.connect(deployer).queue(1, migratorAddress);
     await oldTreasury.connect(deployer).queue(3, migratorAddress);
     await oldTreasury.connect(deployer).queue(6, migratorAddress);
-    await oldTreasury.connect(deployer).queue(2, pairDaiOOHM);
-    await oldTreasury.connect(deployer).queue(2, pairDaiOHM);
+    await oldTreasury.connect(deployer).queue(2, pairDaiOPrism);
+    await oldTreasury.connect(deployer).queue(2, pairDaiPrism);
 
     await oldTreasury.connect(deployer).toggle(1, migratorAddress, migratorAddress);
     await oldTreasury.connect(deployer).toggle(3, migratorAddress, migratorAddress);
     await oldTreasury.connect(deployer).toggle(6, migratorAddress, migratorAddress);
-    await oldTreasury.connect(deployer).toggle(2, pairDaiOOHM, pairDaiOOHM);
-    await oldTreasury.connect(deployer).toggle(2, pairDaiOHM, pairDaiOHM);
+    await oldTreasury.connect(deployer).toggle(2, pairDaiOPrism, pairDaiOPrism);
+    await oldTreasury.connect(deployer).toggle(2, pairDaiPrism, pairDaiPrism);
 
     await olympusTreasury.connect(deployer).queue(0, migratorAddress);
     await olympusTreasury.connect(deployer).toggle(0, migratorAddress, migratorAddress);
 
-    await olympusTreasury.connect(deployer).queue(2, pairDaiOHM);
-    await olympusTreasury.connect(deployer).toggle(2, pairDaiOHM, pairDaiOHM);
+    await olympusTreasury.connect(deployer).queue(2, pairDaiPrism);
+    await olympusTreasury.connect(deployer).toggle(2, pairDaiPrism, pairDaiPrism);
 
     // await olympusTreasury.connect(deployer).enable(5, dai.address, dai.address);
 
     const GOHM = await ethers.getContractFactory("gOHM");
-    const gOHM = await GOHM.deploy(migratorAddress, sOHM.address)
+    const gOHM = await GOHM.deploy(migratorAddress, rainbow.address)
     await gOHM.deployed()
 
-    await migrator.migrateContracts(olympusTreasury.address, staking.address, ohm.address, dai.address);
+    await migrator.migrateContracts(olympusTreasury.address, staking.address, prism.address, dai.address);
     // add liquidity to the pool
-    // console.log(await migrator.callStatic.migrateLP(pairDaiOOHM, false, dai.address, ethers.utils.parseUnits("10", 'ether'), ethers.utils.parseUnits("10", 'ether')));
+    // console.log(await migrator.callStatic.migrateLP(pairDaiOPrism, false, dai.address, ethers.utils.parseUnits("10", 'ether'), ethers.utils.parseUnits("10", 'ether')));
     
-    // Initialize sohm
-    await sOHM.setIndex("0");
-    // await sOHM.setgOHM(gOHM.address);
-    await sOHM.initialize(staking.address);
+    // Initialize Rnbw
+    await rainbow.setIndex("0");
+    await rainbow.initialize(staking.address);
 
     const PrismLock = await ethers.getContractFactory("PrismLock");
-    const prismLock = await PrismLock.deploy(sOHM.address);
+    const prismLock = await PrismLock.deploy(rainbow.address);
     await prismLock.deployed();
     
     const daySec = 86400;
@@ -195,14 +198,14 @@ async function main() {
     await prismLock.addLockUnit(daySec * 180, 115);
 
     const StakingHelper = await ethers.getContractFactory("StakingHelper");
-    const stakingHelper = await StakingHelper.deploy(staking.address, prismLock.address, ohm.address);
+    const stakingHelper = await StakingHelper.deploy(staking.address, prismLock.address, prism.address);
     await stakingHelper.deployed();
 
     await staking.connect(deployer).setContract(2, prismLock.address);
     await prismLock.connect(deployer).setHelper(stakingHelper.address);
 
     const BondCalculator = await ethers.getContractFactory("OlympusBondingCalculator")
-    const bondCalculator = await BondCalculator.deploy(ohm.address)
+    const bondCalculator = await BondCalculator.deploy(prism.address)
     await bondCalculator.deployed()
 
     const RedeemHelper = await ethers.getContractFactory("RedeemHelper")
@@ -211,11 +214,11 @@ async function main() {
 
     const BondDepository = await ethers.getContractFactory("OlympusBondDepository")
     const bondDepository = await BondDepository.deploy(
-        ohm.address,
+        prism.address,
         // pairDaiOHM,
         dai.address,
         olympusTreasury.address,
-        sOHM.address,
+        rainbow.address,
         ethers.constants.AddressZero
         // bondCalculator.address
     );
@@ -225,12 +228,12 @@ async function main() {
     await olympusTreasury.connect(deployer).toggle(0, bondDepository.address, bondDepository.address);
 
     await dai.approve(uniRouter.address, daiPair);
-    await ohm.approve(uniRouter.address, ohmPair);
+    await prism.approve(uniRouter.address, prismPair);
     await uniRouter.addLiquidity(
         dai.address,
-        ohm.address,
+        prism.address,
         daiPair, 
-        ohmPair,
+        prismPair,
         ethers.utils.parseUnits("10", 'ether'), 
         ethers.utils.parseUnits("10", 'gwei'),
         bondDepository.address,
@@ -243,12 +246,12 @@ async function main() {
 
 const config = `DAI_BOND_DEPOSITORY: "${bondDepository.address}",
 DAI_ADDRESS: "${dai.address}",
-OHM_ADDRESS: "${ohm.address}",
+PRISM_ADDRESS: "${prism.address}",
+RAINBOW_ADDRESS: "${rainbow.address}",
 STAKING_ADDRESS: "${staking.address}",
 STAKING_HELPER_ADDRESS: "${stakingHelper.address}",
 OLD_STAKING_ADDRESS: "${oldStaking.address}",
-SOHM_ADDRESS: "${sOHM.address}",
-OLD_SOHM_ADDRESS: "${oldSOHM.address}",
+OLD_RAINBOW_ADDRESS: "${oldRainbow.address}",
 BONDINGCALC_ADDRESS: "${bondCalculator.address}",
 TREASURY_ADDRESS: "${olympusTreasury.address}",
 REDEEM_HELPER_ADDRESS: "${redeemHelper.address}",
@@ -256,8 +259,8 @@ PRISM_LOCKER: "${prismLock.address}",
 WSOHM_ADDRESS: "${wsOHM.address}",
 GOHM_ADDRESS: "${gOHM.address}",
 MIGRATOR_ADDRESS: "${migratorAddress}",
-DAI_OLD_OHM_PAIR: "${pairDaiOOHM}",
-DAI_OHM_PAIR: "${pairDaiOHM}",
+DAI_OLD_PRISM_PAIR: "${pairDaiOPrism}",
+DAI_PRISM_PAIR: "${pairDaiPrism}",
 DISTRIBUTOR: "${distributor.address}",
 UNI_FACTOR: "${uniFactory.address}",
 UNI_FOUTER: "${uniRouter.address}",

@@ -4,13 +4,13 @@ pragma solidity ^0.7.5;
 import "./libraries/SafeMath.sol";
 
 import "./interfaces/IERC20.sol";
-import "./interfaces/IOHM.sol";
+import "./interfaces/IPrism.sol";
 import "./interfaces/IERC20Permit.sol";
 
 import "./types/ERC20Permit.sol";
 import "./types/OlympusAccessControlled.sol";
 
-contract OlympusERC20Token is ERC20Permit, IOHM, OlympusAccessControlled {
+contract PrismERC20Token is ERC20Permit, IPrism, OlympusAccessControlled {
     using SafeMath for uint256;
 
     uint32 private fee;
@@ -18,8 +18,8 @@ contract OlympusERC20Token is ERC20Permit, IOHM, OlympusAccessControlled {
     address public immutable PrismWallet;
 
     constructor(address _authority, address _wallet) 
-    ERC20("Olympus", "OHM", 9) 
-    ERC20Permit("Olympus") 
+    ERC20("Prism", "Prism", 9) 
+    ERC20Permit("Prism") 
     OlympusAccessControlled(IOlympusAuthority(_authority)) {
         require(_wallet != address(0));
         PrismWallet = _wallet;

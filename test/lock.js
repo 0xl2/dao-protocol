@@ -9,7 +9,7 @@ describe.only("Staking test", () => {
     it("get sohm", async() => {
         try {
             const rainbowAddress = "0x46f8917DDb2d8a4d86E3F44b7cd7b75c1463a7F9";
-            const rainbowContract = await ethers.getContractAt("sOlympus", rainbowAddress);
+            const rainbowContract = await ethers.getContractAt("RainbowERC20", rainbowAddress);
 
             const lockAddress = "0x1974158f77b3a499c8A819D26Ca64261D7E89f92";
             const lockContract = await ethers.getContractAt("PrismLock", lockAddress);

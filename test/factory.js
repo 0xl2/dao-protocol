@@ -11,7 +11,7 @@ describe("CreatePair test", () => {
         const dai = await DAI.deploy(43113)
         await dai.deployed()
 
-        const OldOHM = await ethers.getContractFactory("OldOlympusERC20Token")
+        const OldOHM = await ethers.getContractFactory("OldPrismERC20Token")
         const oldOHM = await OldOHM.deploy()
         await oldOHM.deployed()
 
@@ -23,7 +23,7 @@ describe("CreatePair test", () => {
         const authority = await Authority.deploy(deployer.address, deployer.address, deployer.address, deployer.address)
         await authority.deployed()
 
-        const OHM = await ethers.getContractFactory("OlympusERC20Token");
+        const OHM = await ethers.getContractFactory("PrismERC20Token");
         const ohm = await OHM.deploy(authority.address);
         await ohm.deployed()
 

@@ -16,7 +16,7 @@ describe("Staking test", () => {
 
             const dayinSec = 86400;
 
-            const sOHM = await ethers.getContractAt("sOlympus", sOHMAdress);
+            const sOHM = await ethers.getContractAt("RainbowERC20", sOHMAdress);
             const stakingHelper = await ethers.getContractAt("StakingHelper", helperAddress);
             const stakingContract = await ethers.getContractAt("OlympusStaking", stakeAddress);
             const lockContract = await ethers.getContractAt("PrismLock", lockAddress);

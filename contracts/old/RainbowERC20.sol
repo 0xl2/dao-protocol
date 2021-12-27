@@ -973,7 +973,7 @@ contract Ownable is IOwnable {
     }
 }
 
-contract OldSOlympus is ERC20Permit, Ownable {
+contract OldRainbow is ERC20Permit, Ownable {
 
     using SafeMath for uint256;
 
