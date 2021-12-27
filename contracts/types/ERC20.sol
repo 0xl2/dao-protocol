@@ -2,12 +2,9 @@
 pragma solidity >=0.7.5;
 
 import "../libraries/SafeMath.sol";
-
 import "../interfaces/IERC20.sol";
 
-
 abstract contract ERC20 is IERC20 {
-
     using SafeMath for uint256;
 
     // TODO comment actual hash value.

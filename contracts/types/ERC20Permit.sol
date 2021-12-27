@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.7.5;
 
-import "../interfaces/IERC20Permit.sol";
 import "./ERC20.sol";
+import "../interfaces/IERC20Permit.sol";
 import "../cryptography/EIP712.sol";
 import "../cryptography/ECDSA.sol";
 import "../libraries/Counters.sol";
