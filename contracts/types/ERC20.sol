@@ -36,7 +36,7 @@ abstract contract ERC20 is IERC20 {
         return _symbol;
     }
 
-    function decimals() public view virtual returns (uint8) {
+    function decimals() public view override returns (uint8) {
         return _decimals;
     }
 
@@ -115,5 +115,5 @@ abstract contract ERC20 is IERC20 {
         emit Approval(owner, spender, amount);
     }
 
-  function _beforeTokenTransfer( address from_, address to_, uint256 amount_ ) internal virtual { }
+    function _beforeTokenTransfer( address from_, address to_, uint256 amount_ ) internal virtual { }
 }

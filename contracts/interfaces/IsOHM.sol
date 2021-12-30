@@ -14,11 +14,7 @@ interface IsOHM is IERC20 {
 
     function index() external view returns ( uint );
 
-    function toG(uint amount) external view returns (uint);
-
-    function fromG(uint amount) external view returns (uint);
-
-     function changeDebt(
+    function changeDebt(
         uint256 amount,
         address debtor,
         bool add

@@ -237,7 +237,6 @@ contract OlympusStaking is Ownable {
      */
     function rebase() public {
         if( epoch.endBlock <= block.number ) {
-
             IsOHM( sOHM ).rebase( epoch.distribute, epoch.number );
 
             epoch.endBlock = epoch.endBlock.add( epoch.length );

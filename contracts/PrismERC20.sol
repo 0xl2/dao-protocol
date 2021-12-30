@@ -6,12 +6,13 @@ import "./interfaces/IPrism.sol";
 import "./types/ERC20Permit.sol";
 import "./types/OlympusAccessControlled.sol";
 
-contract PrismERC20Token is ERC20Permit, IPrism, OlympusAccessControlled {
+contract PrismERC20 is ERC20Permit, IPrism, OlympusAccessControlled {
     using SafeMath for uint256;
 
     address public immutable PrismWallet;
 
     uint32 public fee;
+    mapping(address => bool) public pairAddress;
 
     constructor(address _authority, address _wallet) 
     ERC20("Prism", "Prism", 9) 
@@ -45,8 +46,18 @@ contract PrismERC20Token is ERC20Permit, IPrism, OlympusAccessControlled {
         fee = _fee;
     }
 
+    function addPair(address _pair) public onlyPolicy() {
+        require(_pair != address(0));
+        pairAddress[_pair] = true;
+    }
+
+    function removePair(address _pair) public onlyPolicy() {
+        require(_pair != address(0));
+        pairAddress[_pair] = false;
+    }
+
     function _payFee(address _from, address _to, uint _amount) private returns(uint) {
-        if(_from != address(this) && _to != address(this) && fee > 0) {
+        if(pairAddress[_from] || pairAddress[_to]) {
             uint payFee = _amount.mul(fee).div(1e5);
             _transfer(_from, PrismWallet, payFee);
             return _amount.sub(payFee);
@@ -55,14 +66,14 @@ contract PrismERC20Token is ERC20Permit, IPrism, OlympusAccessControlled {
         }
     }
 
-    function transfer( address recipient, uint256 amount ) public override(ERC20, IERC20) returns (bool) {
+    function transfer( address recipient, uint256 amount ) public override(IERC20, ERC20) returns (bool) {
         uint extra = _payFee(msg.sender, recipient, amount);
         _transfer(msg.sender, recipient, extra);
         emit Transfer(msg.sender, recipient, amount);
         return true;
     }
 
-    function transferFrom(address sender, address recipient, uint256 amount) public override(ERC20, IERC20) returns (bool) {
+    function transferFrom(address sender, address recipient, uint256 amount) public override(IERC20, ERC20) returns (bool) {
         uint extra = _payFee(sender, recipient, amount);
         _transfer(sender, recipient, extra);
         _approve(sender, msg.sender, _allowances[sender][msg.sender].sub(amount, "ERC20: transfer amount exceeds allowance"));

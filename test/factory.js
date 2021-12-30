@@ -23,11 +23,11 @@ describe("CreatePair test", () => {
         const authority = await Authority.deploy(deployer.address, deployer.address, deployer.address, deployer.address)
         await authority.deployed()
 
-        const OHM = await ethers.getContractFactory("PrismERC20Token");
+        const OHM = await ethers.getContractFactory("PrismERC20");
         const ohm = await OHM.deploy(authority.address);
         await ohm.deployed()
 
-        const BondCalculator = await ethers.getContractFactory("OlympusBondingCalculator")
+        const BondCalculator = await ethers.getContractFactory("BondCalculator")
         const bondCalculator = await BondCalculator.deploy(ohm.address)
         await bondCalculator.deployed()
         

@@ -187,9 +187,8 @@ library SafeERC20 {
 }
 
 interface IERC20Mintable {
-  function mint( uint256 amount_ ) external;
-
-  function mint( address account_, uint256 ammount_ ) external;
+    function mint( uint256 amount_ ) external;
+    function mint( address account_, uint256 ammount_ ) external;
 }
 
 interface IOHMERC20 {
@@ -197,11 +196,10 @@ interface IOHMERC20 {
 }
 
 interface IBondCalculator {
-  function valuation( address pair_, uint amount_ ) external view returns ( uint _value );
+    function valuation( address pair_, uint amount_ ) external view returns ( uint _value );
 }
 
 contract OlympusTreasury is Ownable {
-
     using SafeMath for uint;
     using SafeERC20 for IERC20;
 
@@ -526,7 +524,6 @@ contract OlympusTreasury is Ownable {
             }
             result = !isReserveDepositor[ _address ];
             isReserveDepositor[ _address ] = result;
-            
         } else if ( _managing == MANAGING.RESERVESPENDER ) { // 1
             if ( requirements( reserveSpenderQueue, isReserveSpender, _address ) ) {
                 reserveSpenderQueue[ _address ] = 0;
@@ -536,7 +533,6 @@ contract OlympusTreasury is Ownable {
             }
             result = !isReserveSpender[ _address ];
             isReserveSpender[ _address ] = result;
-
         } else if ( _managing == MANAGING.RESERVETOKEN ) { // 2
             if ( requirements( reserveTokenQueue, isReserveToken, _address ) ) {
                 reserveTokenQueue[ _address ] = 0;
@@ -546,7 +542,6 @@ contract OlympusTreasury is Ownable {
             }
             result = !isReserveToken[ _address ];
             isReserveToken[ _address ] = result;
-
         } else if ( _managing == MANAGING.RESERVEMANAGER ) { // 3
             if ( requirements( ReserveManagerQueue, isReserveManager, _address ) ) {
                 reserveManagers.push( _address );
@@ -557,7 +552,6 @@ contract OlympusTreasury is Ownable {
             }
             result = !isReserveManager[ _address ];
             isReserveManager[ _address ] = result;
-
         } else if ( _managing == MANAGING.LIQUIDITYDEPOSITOR ) { // 4
             if ( requirements( LiquidityDepositorQueue, isLiquidityDepositor, _address ) ) {
                 liquidityDepositors.push( _address );
@@ -568,7 +562,6 @@ contract OlympusTreasury is Ownable {
             }
             result = !isLiquidityDepositor[ _address ];
             isLiquidityDepositor[ _address ] = result;
-
         } else if ( _managing == MANAGING.LIQUIDITYTOKEN ) { // 5
             if ( requirements( LiquidityTokenQueue, isLiquidityToken, _address ) ) {
                 LiquidityTokenQueue[ _address ] = 0;
@@ -579,7 +572,6 @@ contract OlympusTreasury is Ownable {
             result = !isLiquidityToken[ _address ];
             isLiquidityToken[ _address ] = result;
             bondCalculator[ _address ] = _calculator;
-
         } else if ( _managing == MANAGING.LIQUIDITYMANAGER ) { // 6
             if ( requirements( LiquidityManagerQueue, isLiquidityManager, _address ) ) {
                 LiquidityManagerQueue[ _address ] = 0;
@@ -589,7 +581,6 @@ contract OlympusTreasury is Ownable {
             }
             result = !isLiquidityManager[ _address ];
             isLiquidityManager[ _address ] = result;
-
         } else if ( _managing == MANAGING.DEBTOR ) { // 7
             if ( requirements( debtorQueue, isDebtor, _address ) ) {
                 debtorQueue[ _address ] = 0;
@@ -599,7 +590,6 @@ contract OlympusTreasury is Ownable {
             }
             result = !isDebtor[ _address ];
             isDebtor[ _address ] = result;
-
         } else if ( _managing == MANAGING.REWARDMANAGER ) { // 8
             if ( requirements( rewardManagerQueue, isRewardManager, _address ) ) {
                 rewardManagerQueue[ _address ] = 0;
@@ -609,12 +599,10 @@ contract OlympusTreasury is Ownable {
             }
             result = !isRewardManager[ _address ];
             isRewardManager[ _address ] = result;
-
         } else if ( _managing == MANAGING.SOHM ) { // 9
             sOHMQueue = 0;
             sOHM = _address;
             result = true;
-
         } else return false;
 
         emit ChangeActivated( _managing, _address, result );

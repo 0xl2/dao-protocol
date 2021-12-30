@@ -259,7 +259,7 @@ interface IBondingCalculator {
   function valuation( address pair_, uint amount_ ) external view returns ( uint _value );
 }
 
-contract OlympusBondingCalculator is IBondingCalculator {
+contract BondCalculator is IBondingCalculator {
 
     using FixedPoint for *;
     using SafeMath for uint;

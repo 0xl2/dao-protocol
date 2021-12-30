@@ -1,6 +1,6 @@
 const { ethers } = require("hardhat");
 
-describe.only("Staking test", () => {
+describe("Staking test", () => {
     let deployer;
     before(async () => {
         [deployer] = await ethers.getSigners();

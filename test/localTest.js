@@ -1,5 +1,5 @@
 // it("OHM transfer", async() => {
-    //     const ohmContract = await ethers.getContractAt("PrismERC20Token", "0x0C3CfaE41eA239e86AedE52CCAf0Bf900a24E07f", deployer);
+    //     const ohmContract = await ethers.getContractAt("PrismERC20", "0x0C3CfaE41eA239e86AedE52CCAf0Bf900a24E07f", deployer);
     //     const stakingContract = await ethers.getContractAt("OlympusStaking", "0xaD3D64f29f591835cB223c12af3716ae7Df6e3A9", deployer);
         
     //     try {

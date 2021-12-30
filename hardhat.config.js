@@ -19,18 +19,17 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
  * @type import('hardhat/config').HardhatUserConfig
  */
 module.exports = {
-  // defaultNetwork: "avalanche_test",
   defaultNetwork: "local",
   networks: {
     hardhat: {
       // url: "http://localhost:8545",
       chainId: 31337,
-      // gasPrice: 2000000000,
+      gasPrice: 2000000000,
       gas: 6000000,
-      forking: {
-        enabled: true,
-        url: `https://mainnet.infura.io/v3/${keyConfig.infura_key}`,
-      }
+      // forking: {
+      //   enabled: true,
+      //   url: `https://mainnet.infura.io/v3/${keyConfig.infura_key}`,
+      // }
     },
     local: {
       url: "http://localhost:7545",
@@ -39,26 +38,20 @@ module.exports = {
       gas: 6000000,
       accounts: [keyConfig.ganache]
     },
-    ropsten: {
+    mainnet: {
       url: `https://eth-mainnet.alchemyapi.io/v2/${keyConfig.alchemy_key}`,
-      chainId: 3,
+      chainId: 1,
       gasPrice: 2000000000,
-      gas: 2100000,
+      gas: 6000000,
       accounts: [keyConfig.eth_key]
     },
     avalanche_test: {
       chainId: 43113,
       gasPrice: 225000000000,
-      gas: 2100000,
+      gas: 6000000,
       url: 'https://api.avax-test.network/ext/bc/C/rpc',
       accounts: [keyConfig.eth_key]
     },
-    // ropsten: {
-    //
-    // },
-    // mainnet: {
-    // 
-    // }
   },
   solidity: {
     compilers: [

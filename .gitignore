@@ -12,5 +12,7 @@ artifacts
 config/config.json
 config/deploy.js
 config/local-deploy.txt
+config/fuji-deploy.txt
+config/ropsten-deploy.txt
 
 scripts/LocalDeploy.js
