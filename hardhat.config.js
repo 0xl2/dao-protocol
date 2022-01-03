@@ -39,10 +39,19 @@ module.exports = {
       accounts: [keyConfig.ganache]
     },
     mainnet: {
-      url: `https://eth-mainnet.alchemyapi.io/v2/${keyConfig.alchemy_key}`,
+      // url: `https://eth-mainnet.alchemyapi.io/v2/${keyConfig.alchemy_key}`,
+      url: `https://mainnet.infura.io/v3/${keyConfig.infura_key}`,
       chainId: 1,
       gasPrice: 2000000000,
       gas: 6000000,
+      accounts: [keyConfig.eth_key]
+    },
+    ropsten: {
+      // url: `https://ropsten.infura.io/v3/${keyConfig.infura_key}`,
+      url: `https://eth-ropsten.alchemyapi.io/v2/${keyConfig.alchemy_key}`,
+      chainId: 3,
+      gasPrice: 2000000000,
+      gas: 2000000,
       accounts: [keyConfig.eth_key]
     },
     avalanche_test: {
@@ -96,4 +105,7 @@ module.exports = {
     outDir: "typechain",
     target: "ethers-v5",
   },
+  mocha: {
+    timeout: 40000
+  }
 };

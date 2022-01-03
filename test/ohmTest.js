@@ -13,9 +13,9 @@ describe.only("OHM transfer test", () => {
             // console.log(await bondCalulator.markdown('0x796f594e502F69a188b1E524e4FB36d50924F0Eb'));
 
             // const bondDepository = await ethers.getContractAt("OlympusBondDepository", "0x8510c8c2B6891E04864fa196693D44E6B6ec2514", deployer);
-            
-            // const bondDepoAddr = locKey.DAI_BOND_DEPOSITORY;
             const bondDepository = await ethers.getContractAt("OlympusBondDepository", locKey.DAI_BOND_DEPOSITORY, deployer);
+
+            // const bondDepoAddr = locKey.DAI_BOND_DEPOSITORY;
             // const daiAddress = locKey.DAI_ADDRESS
             // const BondDepository = await ethers.getContractFactory("DAIBondDepository");
             // const bondDepository = await BondDepository.deploy(
@@ -32,7 +32,7 @@ describe.only("OHM transfer test", () => {
             // console.log(bondDepoAddr, "bondDepository.address");
             
 
-            const treasury = await ethers.getContractAt("OlympusTreasury", locKey.TREASURY_ADDRESS)
+            // const treasury = await ethers.getContractAt("OlympusTreasury", locKey.TREASURY_ADDRESS)
             // await treasury.connect(deployer).queue(0, bondDepoAddr);
             // await treasury.connect(deployer).toggle(0, bondDepoAddr, bondDepoAddr);
             // console.log(await treasury.isReserveToken(daiAddress), "isReserveToken");
@@ -41,6 +41,8 @@ describe.only("OHM transfer test", () => {
             // console.log(await ohm.callStatic.totalSupply(), "totalSupply");
             
             console.log(await bondDepository.callStatic.terms(), "terms");
+            console.log(await bondDepository.callStatic.adjustment(), "adjustment");
+            console.log(await bondDepository.callStatic.lastDecay(), "lastDecay");
             console.log(await bondDepository.callStatic.totalDebt(), "totalDebt");
             console.log(await bondDepository.callStatic.debtDecay(), "debtDecay");
             console.log(await bondDepository.callStatic.currentDebt(), "currentDebt");
@@ -51,10 +53,6 @@ describe.only("OHM transfer test", () => {
             
             // const dai = await ethers.getContractAt("DAI", daiAddress)
             // await dai.connect(deployer).approve(bondDepoAddr, ethers.utils.parseUnits("1000000", 'ether').toString());
-
-            // const payout = await bondDepository.payoutFor(treasuryVal);
-            // console.log(payout, "payoutFor");
-            // console.log(await bondDepository.bondPrice(), "bondPrice");
 
             // console.log(await bondDepository.callStatic.deposit(ethers.utils.parseUnits("10", 'ether'), 1900, deployer.address));
         } catch(err) {

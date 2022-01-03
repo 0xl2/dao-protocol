@@ -51,7 +51,7 @@ async function main() {
     await staking.deployed();
 
     // Initialize Rnbw
-    await rainbow.setIndex("0");
+    await rainbow.setIndex("7675210820");
     await rainbow.initialize(staking.address);
 
     const Distributor = await ethers.getContractFactory("Distributor");
@@ -83,6 +83,7 @@ async function main() {
     await prismLock.deployed();
     
     await prismLock.setPenalty(10000); // set penalty 10%
+    await prismLock.setReward(rainbow.address);
     await prismLock.addLockUnit(daySec * 14, 115);
     await prismLock.addLockUnit(daySec * 30, 130);
     await prismLock.addLockUnit(daySec * 90, 150);
@@ -123,19 +124,28 @@ async function main() {
     await olympusTreasury.connect(deployer).toggle(0, daiBond.address, daiBond.address);
 
     // very important for bonding depository
-    const maxPayout = 10000; // -> 1000 max if 100k prism minted
+    const maxPayout = 30; // -> 1000 max if 100k prism minted
+    const payFee = 10000; // 10000 -> 10%
     await daiBond.initializeBondTerms(
-        742, // control variable
-        33110, // vesting term -> 33110 on mainnet
-        1, // minimum price
+        13000, // control variable
+        50, // vesting term -> 33110 on mainnet
+        31272, // minimum price
         maxPayout, // maxpayout
-        10000, // fee
+        payFee, // fee
         ethers.utils.parseUnits("1000000".toString(), 'ether'), // maxdebt
-        ethers.utils.parseUnits("0.004".toString(), 'ether') // initialdebt -> totaldebt
+        ethers.utils.parseUnits("0", 'ether') // initialdebt -> totaldebt
+    );
+
+    await daiBond.setAdjustment(
+        false,
+        300,
+        10000,
+        100
     );
 
     // set buy/sell fee
-    await prism.connect(deployer).setPercent(5000);
+    await prism.connect(deployer).setPercent(0, 100);
+    await prism.connect(deployer).setPercent(1, 100);
 
 const config = `DAI_BOND_DEPOSITORY: "${daiBond.address}",
 DAI_ADDRESS: "${dai.address}",
@@ -163,7 +173,7 @@ const config1 = `{"DAI_BOND_DEPOSITORY": "${daiBond.address}",
 "PRISM_LOCKER": "${prismLock.address}",
 "DISTRIBUTOR": "${distributor.address}"
 }`
-    
+
     fs.writeFileSync('./config/local-deploy.json', config1)
 }
 

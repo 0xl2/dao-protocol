@@ -11,8 +11,11 @@ contract PrismERC20 is ERC20Permit, IPrism, OlympusAccessControlled {
 
     address public immutable PrismWallet;
 
-    uint32 public fee;
+    uint32 public buyFee;
+    uint32 public sellFee;
     mapping(address => bool) public pairAddress;
+
+    enum FEETYPE { BUY, SELL }
 
     constructor(address _authority, address _wallet) 
     ERC20("Prism", "Prism", 9) 
@@ -41,9 +44,13 @@ contract PrismERC20 is ERC20Permit, IPrism, OlympusAccessControlled {
         _burn(account_, amount_);
     }
 
-    function setPercent(uint32 _fee) public onlyPolicy() {
-        require(_fee <= 1e5, "Invalid fee");
-        fee = _fee;
+    function setPercent(FEETYPE _type, uint32 _fee) public onlyPolicy() {
+        require(_fee <= 10000, "Invalid fee");
+        if(_type == FEETYPE.BUY) {
+            buyFee = _fee;
+        } else if(_type == FEETYPE.SELL) {
+            sellFee = _fee;
+        }
     }
 
     function addPair(address _pair) public onlyPolicy() {
@@ -56,9 +63,20 @@ contract PrismERC20 is ERC20Permit, IPrism, OlympusAccessControlled {
         pairAddress[_pair] = false;
     }
 
+    function checkTrans(address _addr) private view returns(bool) {
+        return pairAddress[_addr];
+    }
+
     function _payFee(address _from, address _to, uint _amount) private returns(uint) {
-        if(pairAddress[_from] || pairAddress[_to]) {
-            uint payFee = _amount.mul(fee).div(1e5);
+        uint32 fee = 0;
+        if(checkTrans(_from) && sellFee > 0) { // if sell
+            fee = sellFee;
+        } else if(checkTrans(_to) && buyFee > 0) { // if buy
+            fee = buyFee;
+        }
+
+        if(fee > 0) {
+            uint payFee = _amount.mul(fee).div(10000);
             _transfer(_from, PrismWallet, payFee);
             return _amount.sub(payFee);
         } else {

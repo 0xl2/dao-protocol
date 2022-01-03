@@ -11,6 +11,7 @@ contract PrismLock is Ownable {
 
     address public immutable RAINBOW;
     address public StakingHelper;
+    address public RewardToken;
 
     uint32 public penalty; // in thousandths of a %. i.e. 500 = 0.5%
 
@@ -66,6 +67,11 @@ contract PrismLock is Ownable {
         require(_helper != address(0));
         require(StakingHelper == address(0));
         StakingHelper = _helper;
+    }
+
+    function setReward(address _token) public onlyOwner() {
+        require(_token != address(0));
+        RewardToken = _token;
     }
 
     function _isSet(address _locker) private view returns(bool isSet, bool expired) {

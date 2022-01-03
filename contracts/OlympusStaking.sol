@@ -96,6 +96,7 @@ contract OlympusStaking is Ownable {
     
     address public warmupContract;
     uint public warmupPeriod;
+    uint private unstakeSum;
     
     constructor ( 
         address _OHM, 
@@ -123,7 +124,12 @@ contract OlympusStaking is Ownable {
         uint expiry;
         bool lock; // prevents malicious delays
     }
+    struct Unstake {
+        uint deposit;
+        uint expiry;
+    }
     mapping( address => Claim ) public warmupInfo;
+    mapping( address => Unstake ) public unstakeInfo;
 
     /**
         @notice stake OHM to enter warmup
@@ -220,7 +226,28 @@ contract OlympusStaking is Ownable {
         if ( _trigger ) {
             rebase();
         }
+
+        Unstake memory info = unstakeInfo[ msg.sender ];
+        unstakeInfo[ msg.sender ] = Unstake ({
+            deposit: info.deposit.add( _amount ),
+            expiry: block.number.add( epoch.length )
+        });
+
+        unstakeSum = unstakeSum.add(_amount);
         IERC20( sOHM ).safeTransferFrom( msg.sender, address(this), _amount );
+    }
+
+    function claimUnstake(uint _amount) public {
+        Unstake memory info = unstakeInfo[ msg.sender ];
+        require(info.deposit >= _amount);
+        require(info.expiry >= block.number);
+
+        unstakeInfo[ msg.sender ] = Unstake ({
+            deposit: info.deposit.sub( _amount ),
+            expiry: info.expiry
+        });
+        
+        unstakeSum = unstakeSum.sub(_amount);
         IERC20( OHM ).safeTransfer( msg.sender, _amount );
     }
 
@@ -262,7 +289,7 @@ contract OlympusStaking is Ownable {
         @return uint
      */
     function contractBalance() public view returns ( uint ) {
-        return IERC20( OHM ).balanceOf( address(this) ).add( totalBonus );
+        return IERC20( OHM ).balanceOf( address(this) ).add( totalBonus ).sub( unstakeSum );
     }
 
     /**
