@@ -35,6 +35,7 @@ contract PrismPresale is Owned {
     using SafeERC20 for IERC20;
 
     // unix timestamp datas
+    bool public openPresale;
     uint public closingTime; // time once the presale will close
     uint public claimStartTime; // time once the claim Prism started
 
@@ -60,18 +61,18 @@ contract PrismPresale is Owned {
     uint public boughtaPrism;
     uint public constant rate = 10;
     // uint public constant secInDay = 86400;
-    // this is only for testing
+    // !!!!!! this is only for testing  !!!!!
     uint public constant secInDay = 60; // 1min
     uint public constant maxaPrismAmount = 3 * 1e14;
 
-    uint public constant minMim1 = 100;
-    uint public constant maxMim1 = 500;
-    uint public constant minMim2 = 500;
-    uint public constant maxMim2 = 1500;
+    uint public constant MimAmount1 = 500;
+    uint public constant MimAmount2 = 1000;
+    uint public constant MimAmount3 = 1500;
     uint public constant MinCCC1 = 16 * 1e6;
-    uint public constant MinCCC2 = 75 * 1e6;
+    uint public constant MinCCC2 = 50 * 1e6;
+    uint public constant MinCCC3 = 75 * 1e6;
 
-    enum BuyType { LV1, LV2 }
+    enum BuyType { LV1, LV2, LV3 }
 
     event TokenPurchase(address indexed purchaser, uint MimAmount, uint aPrismAmount);
     event ClaimPrism(address indexed claimer, uint prismAmount);
@@ -107,9 +108,13 @@ contract PrismPresale is Owned {
         // closingTime = block.timestamp.add(secInDay.mul(2));
         // !!!!!!! this is just for testing !!!!!!!! - 30 min
         closingTime = block.timestamp.add(secInDay.mul(30));
+        openPresale = true;
     }
 
     function startClaim() external onlyOwner {
+        // check presale completed
+        require(closingTime > 0 && block.timestamp > closingTime);
+
         claimStartTime = block.timestamp;
     }
 
@@ -120,7 +125,7 @@ contract PrismPresale is Owned {
     }
 
     function isPresale() public view returns(bool) {
-        return block.timestamp <= closingTime;
+        return block.timestamp <= closingTime && openPresale;
     }
 
     function presaleTime() public view returns(uint _remain) {
@@ -128,60 +133,56 @@ contract PrismPresale is Owned {
     }
 
     function getCCCMin(BuyType _type) public view returns(uint) {
-        uint cccMin = _type == BuyType.LV1 ? MinCCC1 : MinCCC2;
+        uint cccMin = _type == BuyType.LV1 ? MinCCC1 : (_type == BuyType.LV2 ? MinCCC2 : MinCCC3);
         return cccMin.mul(1e9);
     }
 
-    function getMimRange(BuyType _type) public view returns(uint _minMim, uint _maxMim) {
-        _minMim = _type == BuyType.LV1 ? minMim1 : minMim2;
-        _maxMim = _type == BuyType.LV1 ? maxMim1 : maxMim2;
-
-        _minMim = _minMim.mul(1e18);
-        _maxMim = _maxMim.mul(1e18);
+    function getMimAmount(BuyType _type) public view returns(uint) {
+        uint _minAmount = _type == BuyType.LV1 ? MimAmount1 : (_type == BuyType.LV2 ? MimAmount2 : MimAmount3);
+        return _minAmount.mul(1e18);
     }
 
     // allows buyers to put their mim to get some aPrism once the presale will closes
-    function buy(uint _amount, BuyType _type) public {
+    function buy(BuyType _type) public {
         require(isPresale(), "Presale is not open");
         require(whiteListed[msg.sender], "You are not whitelisted");
         
         require(IERC20( CCCToken ).balanceOf(msg.sender) >= getCCCMin(_type), "You don't have enought CCC balance");
 
-        (uint minMim, uint maxMim) = getMimRange(_type);
-        require(_amount >= minMim && maxMim >= _amount, "Your amount is not in valid range");
-        
         preBuy memory selBuyer = preBuys[msg.sender];
-        uint mimAmount = selBuyer.mimAmount.add(_amount);
-        require(mimAmount <= maxMim, "Your aPrism amount exceeds the limit");
+        require(selBuyer.mimAmount == 0, "You bought aPrism alredy");
+
+        uint mimAmount = getMimAmount(_type);
+        require(mimAmount > 0);
 
         // calculate aPrism amount to be created
-        uint aPrismAmount = _amount.mul(rate).div(1e11);
+        uint aPrismAmount = mimAmount.mul(rate).div(1e11);
         require(maxaPrismAmount.sub(boughtaPrism) >= aPrismAmount, "there aren't enough fund to buy more aPrism");
 
         // safe transferFrom of the payout amount
-        IERC20( MIMToken ).safeTransferFrom(msg.sender, address(this), _amount);
+        IERC20( MIMToken ).safeTransferFrom(msg.sender, address(this), mimAmount);
         
         selBuyer.mimAmount = mimAmount;
-        selBuyer.aPrismAmount = selBuyer.aPrismAmount.add(aPrismAmount);
+        selBuyer.aPrismAmount = aPrismAmount;
         preBuys[msg.sender] = selBuyer;
 
         boughtaPrism = boughtaPrism.add(aPrismAmount);
 
         emit TokenPurchase(
             msg.sender,
-            _amount,
+            mimAmount,
             aPrismAmount
         );
     }
 
     function getDay() public view returns(uint) {
+        // return block.timestamp.sub(claimStartTime).div(secInDay);
+        // !!!!!!!! this is only for testing - 10 min  !!!!!!!!!!
         return block.timestamp.sub(claimStartTime).div(secInDay.mul(10));
     }
 
     function getPercent() public view returns (uint _percent) {
         if(claimStartTime > 0 && block.timestamp >= claimStartTime) {
-            // uint dayPassed = block.timestamp.sub(claimStartTime).div(secInDay);
-            // !!!!!!!! this is only for testing - 10 min  !!!!!!!!!!
             uint dayPassed = getDay();
             if(dayPassed > 8) {
                 dayPassed = 8;

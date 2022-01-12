@@ -122,16 +122,25 @@ describe.only("presale test", () => {
         //     presale.connect(acc2).buy(div2, 0)
         // ).to.be.revertedWith("Your aPrism amount exceeds the limit")
 
+        const clientAddr = "0x0198B604c13E1ccA07A6cd31c5dC4CDE68bDdf7E";
+        const clientAddr1 = "0x03C59756667F63Dd91889EB063498e4A766C18e0"
+
         const presale = await ethers.getContractAt("PrismPresale", presaleKey.PRESALE_ADDRESS);
+        const mim = await ethers.getContractAt("MIM", presaleKey.MIM_ADDRESS);
+        const ccc = await ethers.getContractAt("CCC", presaleKey.CCC_ADDRESS);
+
+        // await mim.connect(deployer).mint(clientAddr, ethers.utils.parseUnits("10000", "ether"));
+        // await ccc.connect(deployer).mint(clientAddr, ethers.utils.parseUnits("200000000", "gwei"));
         
         // console.log(await presale.connect(acc1).callStatic.buy(ethers.utils.parseUnits("400", "ether"), 0));
-        await presale.connect(deployer).setWhitelist([
-            deployer.address,
-            acc1.address,
-            acc2.address,
-            // acc3.address,
-            // acc4.address
-        ], true);
+        // await presale.connect(deployer).setWhitelist([
+        //     // deployer.address,
+        //     // acc1.address,
+        //     // acc2.address,
+        //     // clientAddr,
+        //     // clientAddr1
+        //     // "0x6B29442d3BD03517208f4e1d7E516B6e633ab0B7"
+        // ], true);
 
         await presale.connect(deployer).startPresale();
     })

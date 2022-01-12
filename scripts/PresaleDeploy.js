@@ -15,12 +15,16 @@ async function main() {
     await mim.deployed()
     const mimAddr = mim.address;
 
+    const TestPrism = await ethers.getContractFactory("TestPrism");
+    const testPrism = await TestPrism.deploy();
+    await testPrism.deployed();
+    const prismAddr = testPrism.address;
+
     const PresaleContract = await ethers.getContractFactory("PrismPresale");
     const presaleContract = await PresaleContract.deploy(
         mimAddr,
         cccAddr,
-        cccAddr,
-        // locKey.OHM_ADDRESS,
+        prismAddr,
         deployer.address
     );
     await presaleContract.deployed();
@@ -37,15 +41,19 @@ async function main() {
     await mim.connect(deployer).mint(acc1.address, mimMint);
     await mim.connect(deployer).mint(acc2.address, mimMint);
 
+    await testPrism.connect(deployer).mint(presaleContract.address, ethers.utils.parseUnits("300000".toString(), 'gwei'));
+
     const config = `MIM_ADDRESS: "${mimAddr}",
 CCC_ADDRESS: "${cccAddr}",
 PRESALE_ADDRESS: "${presaleContract.address}",
+PRISM_ADDRESS: "${prismAddr}",
 `
     fs.writeFileSync('./config/presale-deploy.txt', config)
 
 const config1 = `{"MIM_ADDRESS": "${mimAddr}",
 "CCC_ADDRESS": "${cccAddr}",
-"PRESALE_ADDRESS": "${presaleContract.address}"
+"PRESALE_ADDRESS": "${presaleContract.address}",
+"PRISM_ADDRESS": "${prismAddr}"
 }`
 
     fs.writeFileSync('./config/presale-deploy.json', config1)
