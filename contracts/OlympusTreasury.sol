@@ -210,12 +210,15 @@ contract OlympusTreasury is Ownable {
     event ReservesManaged( address indexed token, uint amount );
     event ReservesUpdated( uint indexed totalReserves );
     event ReservesAudited( uint indexed totalReserves );
+    event ClaimReward( uint amount, address token, address claimer );
     event RewardsMinted( address indexed caller, address indexed recipient, uint amount );
     event ChangeQueued( MANAGING indexed managing, address queued );
     event ChangeActivated( MANAGING indexed managing, address activated, bool result );
 
     enum MANAGING { RESERVEDEPOSITOR, RESERVESPENDER, RESERVETOKEN, RESERVEMANAGER, LIQUIDITYDEPOSITOR, LIQUIDITYTOKEN, LIQUIDITYMANAGER, DEBTOR, REWARDMANAGER, SOHM }
 
+    address public Locker;
+    address public RewardToken;
     address public immutable OHM;
     uint public immutable blocksNeededForQueue;
 
@@ -328,6 +331,28 @@ contract OlympusTreasury is Ownable {
         IERC20( _token ).safeTransfer( msg.sender, _amount );
 
         emit Withdrawal( _token, _amount, value );
+    }
+
+    function setLocker(address _locker) public onlyManager() {
+        require(_locker != address(0));
+        require(Locker == address(0));
+
+        Locker = _locker;
+    }
+
+    function setReward(address _token) public onlyManager() {
+        require(_token != address(0));
+        RewardToken = _token;
+    }
+
+    function claimReward( uint _amount, address _recipient ) external {
+        require(msg.sender == Locker);
+        require(Locker != address(0));
+        require(RewardToken != address(0));
+
+        emit ClaimReward(_amount, RewardToken, _recipient);
+
+        IERC20( RewardToken ).safeTransfer( _recipient, _amount );
     }
 
     /**

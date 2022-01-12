@@ -77,7 +77,7 @@ interface IERC20 {
 
 interface IStaking {
     function stake( uint _amount, address _recipient ) external returns ( bool );
-    function lock( address _recipient, uint _amount, uint _estimate ) external returns ( bool );
+    function lock( address _recipient, uint _amount ) external returns ( bool );
     function claim( address _recipient ) external;
     function claimLock( address _recipient ) external;
 }
@@ -103,8 +103,7 @@ contract StakingHelper {
             IStaking( staking ).stake( _amount, msg.sender );
             IStaking( staking ).claim( msg.sender );
         } else {
-            uint estimate = IPrismLock(locker).estimateAmount(_duration, _amount);
-            IStaking( staking ).lock( msg.sender, _amount, estimate );
+            IStaking( staking ).lock( msg.sender, _amount );
             IPrismLock( locker ).lock(msg.sender, _amount, _duration);
             IStaking( staking ).claimLock( msg.sender );
         }

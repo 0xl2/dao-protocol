@@ -5,13 +5,18 @@ import "./types/Ownable.sol";
 import "./libraries/SafeMath.sol";
 import "./libraries/SafeERC20.sol";
 
+interface ITreasury {
+    function claimReward(uint _amount, address _recipient) external;
+}
+
 contract PrismLock is Ownable {
     using SafeMath for uint;
+    using SafeMath for uint32;
     using SafeERC20 for IERC20;
 
     address public immutable RAINBOW;
+    address public immutable Treasury;
     address public StakingHelper;
-    address public RewardToken;
 
     uint32 public penalty; // in thousandths of a %. i.e. 500 = 0.5%
 
@@ -22,18 +27,23 @@ contract PrismLock is Ownable {
         uint startTime;
         uint locked;
         uint expired;
+        uint reward;
         uint32 duration;
     }
 
     event Lock(address _locker, uint _startTime, uint _amount, uint32 _duration);
     event UnLock(address _locker, uint _amount);
+    event GetReward(address _locker, uint _amount);
     event AddLockUnit(uint32 _duration, uint32 _multiplier);
     event RemoveLockUnit(uint32 _duration);
     event Penalty(address indexed _to);
 
-    constructor(address _rainbow) {
+    constructor(address _rainbow, address _treasury) {
         require(_rainbow != address(0));
         RAINBOW = _rainbow;
+
+        require(_treasury != address(0));
+        Treasury = _treasury;
     }
 
     modifier onlyHelper() {
@@ -43,7 +53,7 @@ contract PrismLock is Ownable {
 
     function addLockUnit(uint32 _duration, uint32 _multiplier) public onlyOwner() {
         require(_duration > 0, "Lock: Duration is zero");
-        require(_multiplier >= 1, "Lock: Mutiplier under 1");
+        require(_multiplier >= 100, "Lock: Mutiplier under 1");
         
         lockUnits[_duration] = _multiplier;
 
@@ -69,11 +79,6 @@ contract PrismLock is Ownable {
         StakingHelper = _helper;
     }
 
-    function setReward(address _token) public onlyOwner() {
-        require(_token != address(0));
-        RewardToken = _token;
-    }
-
     function _isSet(address _locker) private view returns(bool isSet, bool expired) {
         isSet = userLocked[_locker];
         expired = false;
@@ -88,12 +93,14 @@ contract PrismLock is Ownable {
         if(expired) {
             LockUnit memory userLock = userLocks[_locker];
             uint32 multiplier = lockUnits[userLock.duration];
-            uint expired = userLock.expired.add(userLock.locked.mul(multiplier).div(100));
+            uint reward = userLock.reward.add(userLock.locked.mul(multiplier.sub(100)).div(100));
+            uint expired = userLock.expired.add(userLock.locked);
             userLocks[_locker] = LockUnit({
                 startTime: 0,
                 locked: 0,
+                reward: reward,
                 expired: expired,
-                duration: 0
+                duration: userLock.duration
             });
         }
     }
@@ -113,6 +120,7 @@ contract PrismLock is Ownable {
                 startTime: _startTime,
                 locked: _amount,
                 expired: 0,
+                reward: 0,
                 duration: _duration
             });
 
@@ -142,23 +150,37 @@ contract PrismLock is Ownable {
         }
     }
 
+    function _getReward(uint _amount) private {
+        (, bool expired) = _isSet(msg.sender);
+        if(expired) _reset(msg.sender);
+
+        LockUnit memory userLock = userLocks[msg.sender];
+        
+        require(userLock.reward >= _amount);
+
+        userLock.reward = userLock.reward.sub(_amount);
+        userLocks[msg.sender] = userLock;
+    }
+
     function getDuration() public view returns(uint32 duration) {
-        (bool isSet,) = _isSet(msg.sender);
-        if(isSet) {
+        (bool isSet, bool expired) = _isSet(msg.sender);
+        if(isSet && !expired) {
             duration = userLocks[msg.sender].duration;
         }
     }
 
-    function getLock() public view returns(uint expire, uint locked) {
+    function getLock() public view returns(uint expire, uint locked, uint reward) {
         (bool isSet, bool expired) = _isSet(msg.sender);
         if(isSet) {
             LockUnit memory userLock = userLocks[msg.sender];
+            uint32 multiplier = lockUnits[userLock.duration];
             if(expired) {
-                uint32 multiplier = lockUnits[userLock.duration];
-                expire = userLock.expired.add(userLock.locked.mul(multiplier));
+                expire = userLock.expired.add(userLock.locked);
+                reward = userLock.reward.add(userLock.locked.mul(multiplier.sub(100)).div(100));
             } else {
                 expire = userLock.expired;
                 locked = userLock.locked;
+                reward = userLock.reward;
             }
         }
     }
@@ -187,7 +209,7 @@ contract PrismLock is Ownable {
         require(amount > 0);
         require(userLocked[msg.sender]);
 
-        (uint expire, uint locked) = getLock();
+        (uint expire, uint locked,) = getLock();
 
         require(expire.add(locked) >= amount, "Insufficient locked");
 
@@ -195,5 +217,14 @@ contract PrismLock is Ownable {
         IERC20(RAINBOW).safeTransfer(msg.sender, claimAmount);
 
         emit UnLock(msg.sender, claimAmount);
+    }
+
+    function getReward(uint amount) external {
+        require(amount > 0);
+
+        _getReward(amount);
+        
+        ITreasury( Treasury ).claimReward(amount, msg.sender);
+        emit GetReward(msg.sender, amount);
     }
 }

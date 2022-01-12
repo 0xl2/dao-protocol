@@ -37,7 +37,12 @@ async function main() {
     await rainbow.deployed()
 
     const OlympusTreasury = await ethers.getContractFactory("OlympusTreasury");
-    const olympusTreasury = await OlympusTreasury.deploy(prism.address, dai.address, dai.address, "0")
+    const olympusTreasury = await OlympusTreasury.deploy(
+        prism.address, 
+        dai.address, 
+        dai.address, 
+        "0"
+    );
     await olympusTreasury.deployed()
     
     const Staking = await ethers.getContractFactory("OlympusStaking");

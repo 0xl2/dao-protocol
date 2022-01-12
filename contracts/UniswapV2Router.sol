@@ -1,7 +1,4 @@
-/**
- *Submitted for verification at hecoinfo.com on 2021-12-20
-*/
-
+// SPDX-License-Identifier: AGPL-3.0-or-later
 pragma solidity =0.6.6;
 
 library SafeMath {

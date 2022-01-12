@@ -24,8 +24,8 @@ module.exports = {
     hardhat: {
       // url: "http://localhost:8545",
       chainId: 31337,
-      gasPrice: 2000000000,
-      gas: 6000000,
+      // gasPrice: 2000000000,
+      // gas: 6000000,
       // forking: {
       //   enabled: true,
       //   url: `https://mainnet.infura.io/v3/${keyConfig.infura_key}`,
@@ -36,7 +36,7 @@ module.exports = {
       chainId: 1337,
       gasPrice: 2000000000,
       gas: 6000000,
-      accounts: [keyConfig.ganache]
+      accounts: [keyConfig.ganache, keyConfig.acc1, keyConfig.acc2, keyConfig.acc3, keyConfig.acc4]
     },
     mainnet: {
       // url: `https://eth-mainnet.alchemyapi.io/v2/${keyConfig.alchemy_key}`,
@@ -58,9 +58,17 @@ module.exports = {
       chainId: 43113,
       gasPrice: 225000000000,
       gas: 6000000,
-      url: 'https://api.avax-test.network/ext/bc/C/rpc',
+      // url: 'https://api.avax-test.network/ext/bc/C/rpc',
+      url: 'https://speedy-nodes-nyc.moralis.io/1c8d8856c017266c637672dd/avalanche/testnet',
       accounts: [keyConfig.eth_key]
     },
+    fantom_main: {
+      url: "https://rpc.ftm.tools",
+      chainId: 250,
+      gasPrice: 2000000000,
+      gas: 6000000,
+      accounts: [keyConfig.eth_key]
+    }
   },
   solidity: {
     compilers: [

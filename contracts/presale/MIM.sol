@@ -12,25 +12,10 @@ contract LibNote {
 
   modifier note {
     _;
-    // assembly {
-    //     // log an 'anonymous' event with a constant 6 words of calldata
-    //     // and four indexed topics: selector, caller, arg1 and arg2
-    //     let mark := msize()                         // end of memory ensures zero
-    //     mstore(0x40, add(mark, 288))              // update free memory pointer
-    //     mstore(mark, 0x20)                        // bytes type data offset
-    //     mstore(add(mark, 0x20), 224)              // bytes size (padded)
-    //     calldatacopy(add(mark, 0x40), 0, 224)     // bytes payload
-    //     log4(mark, 288,                           // calldata
-    //          shl(224, shr(224, calldataload(0))), // msg.sig
-    //          caller(),                              // msg.sender
-    //          calldataload(4),                     // arg1
-    //          calldataload(36)                     // arg2
-    //         )
-    // }
   }
 }
 
-contract DAI is LibNote {
+contract MIM is LibNote {
   
   event Approval(address indexed src, address indexed guy, uint wad);
   event Transfer(address indexed src, address indexed dst, uint wad);
@@ -43,13 +28,13 @@ contract DAI is LibNote {
     function deny(address guy) external note auth { wards[guy] = 0; }
 
     modifier auth {
-        require(wards[msg.sender] == 1, "Dai/not-authorized");
+        require(wards[msg.sender] == 1, "MIM/not-authorized");
         _;
     }
 
     // --- ERC20 Data ---
-    string  public constant name     = "Dai Stablecoin";
-    string  public constant symbol   = "DAI";
+    string  public constant name     = "MIM Stablecoin";
+    string  public constant symbol   = "MIM";
     string  public constant version  = "1";
     uint8   public constant decimals = 18;
     uint256 public totalSupply;
@@ -179,9 +164,16 @@ contract DAI is LibNote {
     }
 
     // --- Approve by signature ---
-    function permit(address holder, address spender, uint256 nonce, uint256 expiry,
-                    bool allowed, uint8 v, bytes32 r, bytes32 s) external
-    {
+    function permit(
+        address holder, 
+        address spender, 
+        uint256 nonce, 
+        uint256 expiry,
+        bool allowed, 
+        uint8 v, 
+        bytes32 r, 
+        bytes32 s
+    ) external {
         bytes32 digest =
             keccak256(abi.encodePacked(
                 "\x19\x01",

@@ -130,6 +130,7 @@ contract OlympusStaking is Ownable {
     }
     mapping( address => Claim ) public warmupInfo;
     mapping( address => Unstake ) public unstakeInfo;
+    mapping( address => uint ) public lockInfo;
 
     /**
         @notice stake OHM to enter warmup
@@ -150,7 +151,7 @@ contract OlympusStaking is Ownable {
             expiry: epoch.number.add( warmupPeriod ),
             lock: false
         });
-        
+
         IERC20( sOHM ).safeTransfer( warmupContract, _amount );
         return true;
     }
@@ -168,10 +169,10 @@ contract OlympusStaking is Ownable {
     }
 
     function claimLock( address _recipient ) public {
-        Claim memory info = warmupInfo[ _recipient ];
-        if ( epoch.number >= info.expiry && info.expiry != 0 ) {
-            delete warmupInfo[ _recipient ];
-            IWarmup( warmupContract ).retrieve( locker, info.gons);
+        uint userLock = lockInfo[_recipient];
+        if ( userLock > 0 ) {
+            lockInfo[_recipient] = 0;
+            IWarmup( warmupContract ).retrieve( locker, userLock);
         }
     }
 
@@ -180,22 +181,14 @@ contract OlympusStaking is Ownable {
         @param _amount uint
         @return bool
      */
-    function lock( address _recipient, uint _amount, uint _estimate ) external returns ( bool ) {
+    function lock( address _recipient, uint _amount ) external returns ( bool ) {
         rebase();
         
         IERC20( OHM ).safeTransferFrom( msg.sender, address(this), _amount );
 
-        Claim memory info = warmupInfo[ _recipient ];
-        require( !info.lock, "Deposits for account are locked" );
-
-        warmupInfo[ _recipient ] = Claim ({
-            deposit: info.deposit.add( _amount ),
-            gons: info.gons.add( _estimate ),
-            expiry: epoch.number.add( warmupPeriod ),
-            lock: false
-        });
+        lockInfo[_recipient] = lockInfo[_recipient].add(_amount);
         
-        IERC20( sOHM ).safeTransfer( warmupContract, _estimate );
+        IERC20( sOHM ).safeTransfer( warmupContract, _amount );
         return true;
     }
 
@@ -233,8 +226,8 @@ contract OlympusStaking is Ownable {
             expiry: block.number.add( epoch.length )
         });
 
-        unstakeSum = unstakeSum.add(_amount);
         IERC20( sOHM ).safeTransferFrom( msg.sender, address(this), _amount );
+        unstakeSum = unstakeSum.add(_amount);
     }
 
     function claimUnstake(uint _amount) public {
@@ -247,8 +240,8 @@ contract OlympusStaking is Ownable {
             expiry: info.expiry
         });
         
-        unstakeSum = unstakeSum.sub(_amount);
         IERC20( OHM ).safeTransfer( msg.sender, _amount );
+        unstakeSum = unstakeSum.sub(_amount);
     }
 
     /**
@@ -325,7 +318,7 @@ contract OlympusStaking is Ownable {
             require( warmupContract == address( 0 ), "Warmup cannot be set more than once" );
             warmupContract = _address;
         } else if ( _contract == CONTRACTS.LOCKER ) { // 2
-            require( locker == address(0), "Locker cannot be set more than once" );
+            // require( locker == address(0), "Locker cannot be set more than once" );
             locker = _address;
         }
     }

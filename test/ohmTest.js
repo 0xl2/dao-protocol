@@ -1,7 +1,7 @@
 const { ethers } = require("hardhat");
-const locKey = require("../config/local-deploy.json");
+const locKey = require("../config/fuji-deploy.json");
 
-describe.only("OHM transfer test", () => {
+describe("OHM transfer test", () => {
     let deployer;
     before(async () => {
         [deployer] = await ethers.getSigners();
@@ -12,8 +12,8 @@ describe.only("OHM transfer test", () => {
             // const bondCalulator = await ethers.getContractAt("BondCalculator", "0xbE8D11ed31CD496a4d0F3fd6078b49F1ab1A82DA", deployer);
             // console.log(await bondCalulator.markdown('0x796f594e502F69a188b1E524e4FB36d50924F0Eb'));
 
-            // const bondDepository = await ethers.getContractAt("OlympusBondDepository", "0x8510c8c2B6891E04864fa196693D44E6B6ec2514", deployer);
-            const bondDepository = await ethers.getContractAt("OlympusBondDepository", locKey.DAI_BOND_DEPOSITORY, deployer);
+            const bondDepository = await ethers.getContractAt("OlympusBondDepository", "0x462eEC9f8A067f13B5F8F7356D807FF7f0e28c68", deployer);
+            // const bondDepository = await ethers.getContractAt("OlympusBondDepository", locKey.DAI_BOND_DEPOSITORY, deployer);
 
             // const bondDepoAddr = locKey.DAI_BOND_DEPOSITORY;
             // const daiAddress = locKey.DAI_ADDRESS
@@ -39,6 +39,13 @@ describe.only("OHM transfer test", () => {
 
             // const ohm = await ethers.getContractAt("PrismERC20", locKey.OHM_ADDRESS);
             // console.log(await ohm.callStatic.totalSupply(), "totalSupply");
+
+            // const staking = await ethers.getContractAt("OlympusStaking", locKey.STAKING_ADDRESS);
+            // console.log(await staking.callStatic.contractBalance(), "contractBalance");
+
+            // const rainbow = await ethers.getContractAt("RainbowERC20", locKey.SOHM_ADDRESS);
+            // console.log(await rainbow.callStatic.balanceOf(locKey.STAKING_ADDRESS), "balanceOf");
+            // console.log(await rainbow.callStatic.circulatingSupply(), "circulatingSupply");
             
             console.log(await bondDepository.callStatic.terms(), "terms");
             console.log(await bondDepository.callStatic.adjustment(), "adjustment");
