@@ -124,6 +124,7 @@ describe.only("presale test", () => {
 
         const clientAddr = "0x0198B604c13E1ccA07A6cd31c5dC4CDE68bDdf7E";
         const clientAddr1 = "0x03C59756667F63Dd91889EB063498e4A766C18e0"
+        const clientAddr2 = "0x6B29442d3BD03517208f4e1d7E516B6e633ab0B7";
 
         const presale = await ethers.getContractAt("PrismPresale", presaleKey.PRESALE_ADDRESS);
         const mim = await ethers.getContractAt("MIM", presaleKey.MIM_ADDRESS);
@@ -134,14 +135,14 @@ describe.only("presale test", () => {
         
         // console.log(await presale.connect(acc1).callStatic.buy(ethers.utils.parseUnits("400", "ether"), 0));
         // await presale.connect(deployer).setWhitelist([
-        //     // deployer.address,
-        //     // acc1.address,
-        //     // acc2.address,
-        //     // clientAddr,
-        //     // clientAddr1
-        //     // "0x6B29442d3BD03517208f4e1d7E516B6e633ab0B7"
+        //     deployer.address,
+        //     acc1.address,
+        //     acc2.address,
+        //     clientAddr,
+        //     clientAddr1,
+        //     clientAddr2
         // ], true);
 
-        await presale.connect(deployer).startPresale();
+        // await presale.connect(deployer).startPresale();
     })
 });

@@ -9,10 +9,6 @@ cache
 artifacts
 .vscode
 
-config/config.json
-config/deploy.js
-config/local-deploy.txt
-config/fuji-deploy.txt
-config/ropsten-deploy.txt
+config
 
 scripts/LocalDeploy.js
