@@ -144,5 +144,9 @@ describe.only("presale test", () => {
         // ], true);
 
         // await presale.connect(deployer).startPresale();
+        // await presale.connect(deployer).startClaim();
+
+        console.log(await presale.connect(deployer).callStatic.getPercent(), "getPercent");
+        console.log(await presale.connect(deployer).callStatic.getDay(), "getDay");
     })
 });

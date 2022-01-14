@@ -95,10 +95,12 @@ contract PrismPresale is Owned {
     }
 
     function setPrism(address _prism) external onlyOwner {
+        require(_prism != address(0));
         Prism = _prism;
     }
 
     function setWallet(address _wallet) external onlyOwner {
+        require(_wallet != address(0));
         PrismWallet = _wallet;
     }
 
@@ -109,6 +111,12 @@ contract PrismPresale is Owned {
         // !!!!!!! this is just for testing !!!!!!!! - 30 min
         closingTime = block.timestamp.add(secInDay.mul(30));
         openPresale = true;
+    }
+
+    function stopPresale() external onlyOwner {
+        require(closingTime > 0 && block.timestamp <= closingTime, "Presale is not open");
+
+        openPresale = false;
     }
 
     function startClaim() external onlyOwner {
@@ -150,7 +158,7 @@ contract PrismPresale is Owned {
         require(IERC20( CCCToken ).balanceOf(msg.sender) >= getCCCMin(_type), "You don't have enought CCC balance");
 
         preBuy memory selBuyer = preBuys[msg.sender];
-        require(selBuyer.mimAmount == 0, "You bought aPrism alredy");
+        require(selBuyer.mimAmount == 0, "You bought aPrism already");
 
         uint mimAmount = getMimAmount(_type);
         require(mimAmount > 0);
