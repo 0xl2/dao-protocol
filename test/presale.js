@@ -1,5 +1,6 @@
 const { ethers } = require("hardhat");
 const { expect } = require('chai');
+const whiteList = require("./discord.json");
 const presaleKey = require("../config/presale-deploy.json");
 
 describe.only("presale test", () => {
@@ -24,12 +25,7 @@ describe.only("presale test", () => {
         // await ccc.connect(deployer).mint(clientAddr, ethers.utils.parseUnits("200000000", "gwei"));
         
         // whitelisting
-        await presale.connect(deployer).setWhitelist([
-            deployer.address,
-            clientAddr,
-            clientAddr1,
-            clientAddr2
-        ], true);
+        await presale.connect(deployer).setWhitelist(whiteList, true);
 
         // set prism address
         await presale.connect(deployer).setPrism("your_prism_addr");
@@ -52,5 +48,7 @@ describe.only("presale test", () => {
 
         console.log(await presale.connect(deployer).callStatic.getPercent(), "getPercent");
         console.log(await presale.connect(deployer).callStatic.getDay(), "getDay");
+
+        console.log(await presale.callStatic.isPresale(), "isPresale");
     })
 });
