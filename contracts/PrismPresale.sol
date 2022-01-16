@@ -60,9 +60,7 @@ contract PrismPresale is Owned {
     // buy rate
     uint public boughtaPrism;
     uint public constant rate = 10;
-    // uint public constant secInDay = 86400;
-    // !!!!!! this is only for testing  !!!!!
-    uint public constant secInDay = 60; // 1min
+    uint public constant secInDay = 86400;
     uint public constant maxaPrismAmount = 3 * 1e14;
 
     uint public constant MimAmount1 = 500;
@@ -79,19 +77,13 @@ contract PrismPresale is Owned {
 
     constructor(
         address _mim,
-        address _ccc,
-        address _prism,
-        address _wallet
+        address _ccc
     ) {
         require(_mim != address(0));
         require(_ccc != address(0));
-        require(_prism != address(0));
-        require(_wallet != address(0));
 
-        Prism = _prism;
         MIMToken = _mim;
         CCCToken = _ccc;
-        PrismWallet = _wallet;
     }
 
     function setPrism(address _prism) external onlyOwner {
@@ -107,14 +99,12 @@ contract PrismPresale is Owned {
     function startPresale() external onlyOwner {
         require(closingTime == 0, "Presale is open");
         
-        // closingTime = block.timestamp.add(secInDay.mul(2));
-        // !!!!!!! this is just for testing !!!!!!!! - 30 min
-        closingTime = block.timestamp.add(secInDay.mul(30));
+        closingTime = block.timestamp.add(secInDay.mul(2));
         openPresale = true;
     }
 
     function stopPresale() external onlyOwner {
-        require(closingTime > 0 && block.timestamp <= closingTime, "Presale is not open");
+        require(isPresale(), "Presale is not open");
 
         openPresale = false;
     }
@@ -184,9 +174,7 @@ contract PrismPresale is Owned {
     }
 
     function getDay() public view returns(uint) {
-        // return block.timestamp.sub(claimStartTime).div(secInDay);
-        // !!!!!!!! this is only for testing - 10 min  !!!!!!!!!!
-        return block.timestamp.sub(claimStartTime).div(secInDay.mul(10));
+        return block.timestamp.sub(claimStartTime).div(secInDay);
     }
 
     function getPercent() public view returns (uint _percent) {
@@ -222,9 +210,16 @@ contract PrismPresale is Owned {
     }
 
     // allows operator wallet to get the mim deposited in the contract
-    function retreiveMim() public onlyOwner {
+    function retrieveMim() public onlyOwner {
         require(!isPresale() && closingTime > 0, "Presale is not over yet");
 
         IERC20( MIMToken ).safeTransfer(PrismWallet, IERC20( MIMToken ).balanceOf(address(this)));
+    }
+
+    // allows operator wallet to get the unsold prism in the contract
+    function retrievePrism() public onlyOwner {
+        require(claimStartTime > 0 && getDay() > 8);
+
+        IERC20( Prism ).safeTransfer(PrismWallet, IERC20( Prism ).balanceOf(address(this)));
     }
 }

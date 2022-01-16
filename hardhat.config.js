@@ -60,7 +60,7 @@ module.exports = {
       gas: 6000000,
       // url: 'https://api.avax-test.network/ext/bc/C/rpc',
       url: 'https://speedy-nodes-nyc.moralis.io/1c8d8856c017266c637672dd/avalanche/testnet',
-      accounts: [keyConfig.eth_key, keyConfig.aval1, keyConfig.aval2]
+      accounts: [keyConfig.eth_key]
     },
     fantom_main: {
       url: "https://rpc.ftm.tools",
