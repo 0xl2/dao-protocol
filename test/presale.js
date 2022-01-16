@@ -36,6 +36,7 @@ describe.only("presale test", () => {
 
         // set wallet address to receive mim and unsold prism
         await presale.connect(deployer).setWallet("your_wallet_addr");
+        console.log(await presale.callStatic.PrismWallet(), "PrismWallet");
 
         // start presale
         await presale.connect(deployer).startPresale();
@@ -45,6 +46,9 @@ describe.only("presale test", () => {
 
         // start Prism claim
         await presale.connect(deployer).startClaim();
+
+        // withdraw AVAX from contract
+        await presale.connect(deployer).withdrawFunds();
 
         console.log(await presale.connect(deployer).callStatic.getPercent(), "getPercent");
         console.log(await presale.connect(deployer).callStatic.getDay(), "getDay");

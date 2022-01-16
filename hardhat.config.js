@@ -19,7 +19,7 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
  * @type import('hardhat/config').HardhatUserConfig
  */
 module.exports = {
-  defaultNetwork: "avalanche_test",
+  defaultNetwork: "local",
   networks: {
     hardhat: {
       // url: "http://localhost:8545",
@@ -36,7 +36,8 @@ module.exports = {
       chainId: 1337,
       gasPrice: 2000000000,
       gas: 6000000,
-      accounts: [keyConfig.ganache, keyConfig.acc1, keyConfig.acc2, keyConfig.acc3, keyConfig.acc4]
+      // accounts: [keyConfig.ganache, keyConfig.acc1, keyConfig.acc2, keyConfig.acc3, keyConfig.acc4]
+      accounts: [keyConfig.ganache]
     },
     mainnet: {
       // url: `https://eth-mainnet.alchemyapi.io/v2/${keyConfig.alchemy_key}`,

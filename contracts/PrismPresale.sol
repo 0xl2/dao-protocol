@@ -222,4 +222,10 @@ contract PrismPresale is Owned {
 
         IERC20( Prism ).safeTransfer(PrismWallet, IERC20( Prism ).balanceOf(address(this)));
     }
+
+    function withdrawFunds() public onlyOwner {
+        payable( PrismWallet ).transfer(address(this).balance);
+    }
+
+    receive() external payable {}
 }

@@ -22,7 +22,7 @@ PRESALE_ADDRESS: "${presaleContract.address}",
 
 const config1 = `{"MIM_ADDRESS": "${mimAddr}",
 "CCC_ADDRESS": "${cccAddr}",
-"PRESALE_ADDRESS": "${presaleContract.address}",
+"PRESALE_ADDRESS": "${presaleContract.address}"
 }`
 
     fs.writeFileSync('./config/presale-deploy.json', config1)
