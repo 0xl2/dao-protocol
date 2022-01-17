@@ -130,12 +130,12 @@ contract PrismPresale is Owned {
         _remain = isPresale() ? closingTime - block.timestamp : 0;
     }
 
-    function getCCCMin(BuyType _type) public view returns(uint) {
+    function getCCCMin(BuyType _type) public pure returns(uint) {
         uint cccMin = _type == BuyType.LV1 ? MinCCC1 : (_type == BuyType.LV2 ? MinCCC2 : MinCCC3);
         return cccMin.mul(1e9);
     }
 
-    function getMimAmount(BuyType _type) public view returns(uint) {
+    function getMimAmount(BuyType _type) public pure returns(uint) {
         uint _minAmount = _type == BuyType.LV1 ? MimAmount1 : (_type == BuyType.LV2 ? MimAmount2 : MimAmount3);
         return _minAmount.mul(1e18);
     }

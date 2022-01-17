@@ -1,5 +1,6 @@
 require("@nomiclabs/hardhat-waffle");
 require("@typechain/hardhat");
+require("@nomiclabs/hardhat-etherscan");
 const keyConfig = require('./config/config.json');
 
 // This is a sample Hardhat task. To learn how to create your own go to
@@ -19,7 +20,7 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
  * @type import('hardhat/config').HardhatUserConfig
  */
 module.exports = {
-  defaultNetwork: "local",
+  defaultNetwork: "avalanche_main",
   networks: {
     hardhat: {
       // url: "http://localhost:8545",
@@ -63,10 +64,10 @@ module.exports = {
       url: 'https://speedy-nodes-nyc.moralis.io/1c8d8856c017266c637672dd/avalanche/testnet',
       accounts: [keyConfig.eth_key]
     },
-    fantom_main: {
-      url: "https://rpc.ftm.tools",
-      chainId: 250,
-      gasPrice: 2000000000,
+    avalanche_main: {
+      url: "https://api.avax.network/ext/bc/C/rpc",
+      chainId: 43114,
+      gasPrice: 225000000000,
       gas: 6000000,
       accounts: [keyConfig.eth_key]
     }
@@ -116,5 +117,8 @@ module.exports = {
   },
   mocha: {
     timeout: 40000
-  }
+  },
+  etherscan: {
+    apiKey: keyConfig.aval_key
+  },
 };
